@@ -1,4 +1,3 @@
-import click
 import yaml
 import tempfile
 from azureml.core import Workspace, Datastore, Dataset
@@ -128,33 +127,4 @@ def submit_experiment(ws, configuration, datastores, env):
     # Submit the Experiment job
     run = experiment.submit(job)
 
-    aml_url = run.get_portal_url()
-
-    # Print Experiment URL
-    print(f"Experiment submitted: {aml_url}")
-
-@click.command()
-@click.option('--config', prompt='Path to Experiment Config YAML file',
-              help='Experiment Config YAML file.')
-def experiment(config):
-    """
-    Submit an ML Experiment to an Azure ML Workspace
-    """
-    # Open Experiment Config YAML file
-    configuration = get_configuration(config)
-
-    # Connect to AML Workspace
-    ws = connect_workspace(configuration)
-
-    # Connect and optionally Register Datastores
-    datastores = connect_datastores(ws, configuration)
-
-    # Setup Environment to execute the experiment
-    # writing temporary Env file
-    env = get_env(configuration)
-
-    # Create and Submit the AML Experiment
-    submit_experiment(ws, configuration, datastores, env)
-
-if __name__ == '__main__':
-    experiment()
+    return run.get_portal_url()
