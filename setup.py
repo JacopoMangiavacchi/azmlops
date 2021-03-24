@@ -17,7 +17,9 @@ install_requires = [x.strip() for x in all_reqs if ('git+' not in x) and (
     not x.startswith('#')) and (not x.startswith('-'))]
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs \
                     if 'git+' not in x]
-setup (
+
+
+setup(
  name = 'az_mlops',
  description = 'Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML',
  version = '1.0.0',

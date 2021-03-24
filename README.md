@@ -246,5 +246,5 @@ This tool depends on the following requirements:
 azureml
 azureml-sdk
 click
-yaml
+pyyaml
 ```
