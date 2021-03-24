@@ -1,10 +1,10 @@
-# az_mlops - MLOps in a Script for Azure ML
+# azmlops - MLOps in a Script for Azure ML
 
 Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML.
 
 ## Introduction
 
-**az_mlops** is a minimal MLOps command line interface (CLI) tool to easily submit Azure ML (AML) Experiments and Pipelinse and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
+**azmlops** is a minimal MLOps command line interface (CLI) tool to easily submit Azure ML (AML) Experiments and Pipelinse and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
 
 The intent of the tool is to provide an easy and fully **declarative** approach to create and submit AML Experiments and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments and Pipelines on an AML Compute environment connected to one or more DataStores.
 
@@ -125,7 +125,7 @@ Examples of supported Azure storage services that can be registered as datastore
 - Databricks File System
 - Azure Database for MySQL
 
-> This version of the *az_mlops* tool allow the automatic creation of DataStore connected to Azure Blob Container.
+> This version of the **azmlops** tool allow the automatic creation of DataStore connected to Azure Blob Container.
 
 ### DataReference
 
@@ -139,11 +139,11 @@ As DataReference Dataset is a reference to data in a Datastore and it is created
 
 The main difference between a DataSet and a DataReference is that DataSet are mounted through the Linux FUSE kernel module as Read-only mounting path and therefor they guarantee the **data immutability** pattern when running Experiment and Pipelines.
 
-> The **az_mlops** tool use DataSet for Input data and DataReference for output data.
+> The **azmlops** tool use DataSet for Input data and DataReference for output data.
 
 ## YAML Configuration file for Experiment
 
-This **az_mlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run an Experiment in AML:
+This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run an Experiment in AML:
 
 - An experiment name
 - The AML Workspace connection information
@@ -221,7 +221,7 @@ parameters:
 ## Install
 
 ```bash
-$ pip install az_mlops
+$ pip install azmlops
 ```
 
 ## Command line tool usage
@@ -229,9 +229,9 @@ $ pip install az_mlops
 This tool receive as single input parameter the path to the YAML file containing the configuration of the Experiment to run.  If executed without parameter it will prompt for inputing the path of the YAM file.
 
 ```bash
-$ az_mlops --help
-$ az_mlops --experiment path_to_experiment_config.yaml
-$ az_mlops --pipeline path_to_pipeline_config.yaml
+$ azmlops --help
+$ azmlops --experiment path_to_experiment_config.yaml
+$ azmlops --pipeline path_to_pipeline_config.yaml
 ```
 
 Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of the Experiment.
