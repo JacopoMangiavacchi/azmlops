@@ -221,7 +221,7 @@ parameters:
 ## Install
 
 ```bash
-pip install az_mlops
+$ pip install az_mlops
 ```
 
 ## Command line tool usage
@@ -229,8 +229,9 @@ pip install az_mlops
 This tool receive as single input parameter the path to the YAML file containing the configuration of the Experiment to run.  If executed without parameter it will prompt for inputing the path of the YAM file.
 
 ```bash
-az_mlops --help
-az_mlops --experiment path_to_config.yaml
+$ az_mlops --help
+$ az_mlops --experiment path_to_experiment_config.yaml
+$ az_mlops --pipeline path_to_pipeline_config.yaml
 ```
 
 Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of the Experiment.
