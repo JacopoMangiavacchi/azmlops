@@ -6,7 +6,11 @@ Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azu
 
 **az_mlops** is a minimal MLOps command line interface (CLI) tool to easily submit Azure ML (AML) Experiments and Pipelinse and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
 
-The intent of the tool is to provide a **declarative** approach based on a YAML configuration file where to uniquely configure all the information needed to run a AML Experiment on an AML Compute environment connected to one or more DataStores.
+The intent of the tool is to provide an easy and fully **declarative** approach to create and submit AML Experiments and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments and Pipelines on an AML Compute environment connected to one or more DataStores.
+
+This tool also implement a mechanism for optionally protecting **data immutability** while executing Experiments and Pipelines allowing to run different parametric experimentations with the certainty to always feed the same original input data.
+
+Other main reasons for the development of this tool have been the transparent support for **local test** of experiments and pipeline steps, reducing friction both in execution time and debugging, and the **transparent** capacity to being able to **run full pipelines or to manually submit individual steps** of a pipeline as independent experiments, with no need of reconfiguration or any code changes.
 
 ## What is an Experiment?
 
