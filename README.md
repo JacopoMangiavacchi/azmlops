@@ -1,5 +1,4 @@
-# az_mlops
-MLOps in a Script for Azure ML
+# az_mlops - MLOps in a Script for Azure ML
 
 Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML.
 
@@ -95,7 +94,7 @@ if __name__ == "__main__":
 
 > Advise: the main python script file and the optional other python files used for the experiment should be saved in a specific folder.
 
-## How AML Experiment connect to data
+## How an AML Experiment connect to data
 
 When executing Experiments and Pipelines AML has the capacity to mount on Compute engines, independently if VM or Cluster, a virtual file system extension that connect through the Linux FUSE kernel module to any configurable Azure Blob Storage.
 
