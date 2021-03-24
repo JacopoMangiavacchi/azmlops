@@ -18,7 +18,7 @@ install_requires = [x.strip() for x in all_reqs if ('git+' not in x) and (
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs \
                     if 'git+' not in x]
 setup (
- name = 'az-mlops',
+ name = 'az_mlops',
  description = 'Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML',
  version = '1.0.0',
  packages = find_packages(), # list of all packages
@@ -26,15 +26,15 @@ setup (
  python_requires='>=2.7', # any python greater than 2.7
  entry_points='''
         [console_scripts]
-        az-mlops=az-mlops.__main__:main
+        az_mlops=az_mlops.__main__:main
     ''',
  author="Jacopo Mangiavacchi",
  keyword="mlops, azure, azureml",
  long_description=README,
  long_description_content_type="text/markdown",
  license='MIT',
- url='https://github.com/JacopoMangiavacchi/az-mlops',
- download_url='https://github.com/JacopoMangiavacchi/az-mlops/archive/1.0.0.tar.gz',
+ url='https://github.com/JacopoMangiavacchi/az_mlops',
+ download_url='https://github.com/JacopoMangiavacchi/az_mlops/archive/1.0.0.tar.gz',
   dependency_links=dependency_links,
   author_email='jamangia@microsoft.com',
   classifiers=[
