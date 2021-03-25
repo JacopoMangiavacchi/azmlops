@@ -1,6 +1,6 @@
 import sys
 import click
-from az_mlops.aml_utilities import get_configuration, connect_workspace, register_datastores, connect_datastores, get_env, get_arguments, submit_experiment
+from azmlops.aml_utilities import get_configuration, connect_workspace, register_datastores, connect_datastores, get_env, get_arguments, submit_experiment
 
 
 @click.group()
