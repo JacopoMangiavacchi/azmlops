@@ -230,8 +230,8 @@ This tool receive as single input parameter the path to the YAML file containing
 
 ```bash
 $ azmlops --help
-$ azmlops --experiment path_to_experiment_config.yaml
-$ azmlops --pipeline path_to_pipeline_config.yaml
+$ azmlops experiment path_to_experiment_config.yaml
+$ azmlops pipeline path_to_pipeline_config.yaml
 ```
 
 Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of the Experiment.
@@ -244,7 +244,7 @@ This tool depends on the following requirements:
 
 ```text
 azureml
-azureml-sdk
+azureml-core
 click
 pyyaml
 ```
