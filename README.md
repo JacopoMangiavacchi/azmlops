@@ -206,9 +206,10 @@ environment:
 scripts:
   folder: experiment_scripts
   main: main.py
-datastores:
+data:
   input:
-    - data_store_name: input_datastore
+    - name: input_data
+      data_store_name: input_datastore
       container_name: container
       mount_path: input
       parameter_name: input_path
@@ -216,7 +217,8 @@ datastores:
       account_name: account
       account_key: xxx
   output:
-    - data_store_name: output_datastore
+    - name: output_data
+      data_store_name: output_datastore
       container_name: container
       mount_path: output
       parameter_name: output_path
@@ -241,6 +243,7 @@ parameters:
 - scripts: contain path to the script folder and the name of the main script file in that folder
 - **datastores**: contain the list of all input and output datastore, datareference and dataset to be created for the experiment.
     - the following fields are **mandatory** for each datastore:
+        - **name**: a unique name for the data. To be used for Pipeline I/O and step sequencing
         - **data_store_name**: unique name in the context of a AML Workspace to identify a DataStore
         - **parameter_name**: name of the parameter to be passed to the main python script file of the experiment for the mounting path associated to the corresponding DataReference or DataSet
     - the following fields are **optional** for DataStore creation:
