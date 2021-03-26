@@ -3,6 +3,7 @@ import tempfile
 from azureml.core import Workspace, Datastore, Dataset
 from azureml.core import ScriptRunConfig, Experiment, ComputeTarget, Environment
 from azureml.data.data_reference import DataReference
+from azureml.core.authentication import InteractiveLoginAuthentication
 
 def get_configuration(config):
     """
@@ -16,10 +17,20 @@ def connect_workspace(configuration):
     """
     Connect to AML Workspace
     """
+    force = False
+    if "force_login" in configuration:
+        force = configuration["force_login"]
+
+    if "tenant_id" in configuration:
+        interactive_auth = InteractiveLoginAuthentication(tenant_id=configuration["tenant_id"], force=force)
+    else:
+        interactive_auth = None
+
     return Workspace(
-        configuration["workspace"]["subscription_id"],
-        configuration["workspace"]["resource_group"],
-        configuration["workspace"]["workspace_name"]
+        subscription_id=configuration["workspace"]["subscription_id"],
+        resource_group=configuration["workspace"]["resource_group"],
+        workspace_name=configuration["workspace"]["workspace_name"],
+        auth=interactive_auth
     )
 
 def register_datastores(ws, datastore):
@@ -41,19 +52,22 @@ def connect_datastores(ws, configuration):
     """
     datastores = configuration["datastores"]
 
-    # Register DataStores
-    for datastore in datastores:
-        register_datastores(ws, datastore)
-
-    # Create Datasets and DataReferences
-    for datastore in datastores:
-        datastore["datastore"] = Datastore(ws, datastore["data_store_name"])
-        if "readonly" in datastore and datastore["readonly"] == True:
+    if "input" in datastores:
+        for datastore in datastores["input"]:
+            # Register Input DataStores
+            register_datastores(ws, datastore)
+            # Create Datasets for input Datastores
+            datastore["datastore"] = Datastore(ws, datastore["data_store_name"])
             datastore["dataset"] = Dataset.File.from_files(
                 path=(datastore["datastore"], datastore["mount_path"])
             )
-        else:
-            datastore["readonly"] = False
+
+    if "output" in datastores:
+        for datastore in datastores["output"]:
+            # Register Output DataStores
+            register_datastores(ws, datastore)
+            # Create DataReference for output Datastores
+            datastore["datastore"] = Datastore(ws, datastore["data_store_name"])
             datastore["datareference"] = DataReference(
                 datastore=datastore["datastore"],
                 data_reference_name=f"{datastore['data_store_name']}_reference",
@@ -83,11 +97,14 @@ def get_arguments(configuration, datastores):
     """
     arguments = []
 
-    for datastore in datastores:
-        arguments.append(f"--{datastore['parameter_name']}")
-        if datastore["readonly"] == True:
+    if "input" in datastores:
+        for datastore in datastores["input"]:
+            arguments.append(f"--{datastore['parameter_name']}")
             arguments.append(datastore["dataset"].as_named_input(f"{datastore['data_store_name']}_input").as_mount())
-        else:
+
+    if "output" in datastores:
+        for datastore in datastores["output"]:
+            arguments.append(f"--{datastore['parameter_name']}")
             arguments.append(str(datastore["datareference"]))
 
     if "parameters" in configuration:
@@ -115,11 +132,9 @@ def submit_experiment(ws, configuration, datastores, env):
         compute_target = cluster)
 
     # Connect DataReferences
-    for datastore in datastores:
-        if datastore["readonly"] == False:
-            job.run_config.data_references = {
-                datastore["datareference"].data_reference_name: datastore["datareference"].to_config()
-            }
+    if "output" in datastores:
+        for datastore in datastores["output"]:
+            job.run_config.data_references[datastore["datareference"].data_reference_name] = datastore["datareference"].to_config()
 
     # Config Environment
     job.run_config.environment = env
