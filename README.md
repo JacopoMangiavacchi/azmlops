@@ -6,7 +6,7 @@ Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azu
 
 **azmlops** is a minimal MLOps command line interface (CLI) tool to easily submit Azure ML (AML) Experiments and Pipelinse and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
 
-The intent of the tool is to provide an easy and fully **declarative** approach to create and submit AML Experiments and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments and Pipelines on an AML Compute environment connected to one or more DataStores.
+The intent of the tool is to provide an easy and fully **declarative** and **modular** approach to create and submit AML Experiments and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments and Pipelines on an AML Compute environment connected to one or more DataStores.
 
 This tool also implement a mechanism for optionally protecting **data immutability** while executing Experiments and Pipelines allowing to run different parametric experimentations with the certainty to always feed the same original input data.
 
@@ -157,6 +157,8 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 ```yaml
 ---
 name: Test_Experiment_Script
+tenant_id: tenantid
+force_login: False
 workspace:
   subscription_id: subscription_id
   resource_group: resource_group
@@ -172,22 +174,22 @@ scripts:
   folder: experiment_scripts
   main: main.py
 datastores:
-  - data_store_name: input_datastore
-    container_name: container
-    mount_path: input
-    parameter_name: input_path
-    readonly: true
-    register: true
-    account_name: account
-    account_key: xxx
-  - data_store_name: output_datastore
-    container_name: container
-    mount_path: output
-    parameter_name: output_path
-    readonly: false
-    register: true
-    account_name: account
-    account_key: xxx
+  input:
+    - data_store_name: input_datastore
+      container_name: container
+      mount_path: input
+      parameter_name: input_path
+      register: true
+      account_name: account
+      account_key: xxx
+  output:
+    - data_store_name: output_datastore
+      container_name: container
+      mount_path: output
+      parameter_name: output_path
+      register: true
+      account_name: account
+      account_key: xxx
 parameters:
   input_file: test.txt
   output_file: test.txt
@@ -197,7 +199,9 @@ parameters:
 
 ### YAML fields documentation:
 
-- **experiment_name**: is the name of Experiment to interactivily run the Experiment or the Pipeline as an Experiment
+- **experiment_name**: is the name of the Experiment or the Pipeline to run as an Experiment on AML
+- **tenant_id**: Azure Tenant Id to connect to
+- **force_login**: boolean value. If True force interactive login
 - **workspace**: contain information about how to connect to the AML Workspace. A config.json file with this information could be downloaded from the Azure Portal on the main configuration page of the AML Service.
 - **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.  Other optional values could be for example "cpucluster" or "dlcluser" (for GPU requirements).
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
