@@ -12,7 +12,40 @@ This tool also implement a mechanism for optionally protecting **data immutabili
 
 Other main reasons for the development of this tool have been the transparent support for **local test** of experiments and pipeline steps, reducing friction both in execution time and debugging, and the **transparent** capacity to being able to **run full pipelines or to manually submit individual steps** of a pipeline as independent experiments, with no need of reconfiguration or any code changes.
 
-## What is an Experiment?
+## Install
+
+```bash
+$ pip install azmlops
+```
+
+## Command line tool usage
+
+This tool receive as single input parameter the path to the YAML file containing the configuration of the Experiment to run.  If executed without parameter it will prompt for inputing the path of the YAM file.
+
+```bash
+$ azmlops --help
+$ azmlops experiment path_to_experiment_config.yaml
+$ azmlops pipeline path_to_pipeline_config.yaml
+```
+
+Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of Experiment or Pipeline.
+
+## Implementation
+
+This tool is implemented in Python 3.7 and it use the Azure ML Python SDK to create and submit data connection and scripts to an AML Compute environment such as a Azure Batch cluster or a VM.
+
+This tool depends on the following requirements:
+
+```text
+azureml
+azureml-core
+click
+pyyaml
+```
+
+## Experiment
+
+### What is an Experiment?
 
 An Azure Machine Learning (AML) Experiment represent the collection of trials used to validate a user's hypothesis.
 
@@ -26,7 +59,7 @@ In order to submit an experiment trial for execution to run on a AML Compute env
 - a list of datastores necessary to execute the script in terms of input and optionally output data necessary to execute the experiment
 - optional parameters to pass to the script
 
-## Python experiment script (an example)
+### Python experiment script (an example)
 
 This is the core of the experiment that we want to run in the AML workspace.
 
@@ -98,7 +131,7 @@ if __name__ == "__main__":
 
 > Advise: the main python script file and the optional other python files used for the experiment should be saved in a specific folder.
 
-## How an AML Experiment connect to data
+### How an AML Experiment connect to data
 
 When executing Experiments and Pipelines AML has the capacity to mount on Compute engines, independently if VM or Cluster, a virtual file system extension that connect through the Linux FUSE kernel module to any configurable Azure Blob Storage.
 
@@ -141,7 +174,7 @@ The main difference between a DataSet and a DataReference is that DataSet are mo
 
 > The **azmlops** tool use DataSet for Input data and DataReference for output data.
 
-## YAML Configuration file for Experiment
+### YAML Configuration file for Experiment
 
 This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run an Experiment in AML:
 
@@ -197,7 +230,7 @@ parameters:
 
 > Note that the **parameter_name** and **parameters** keys correspond to the argument parsed with ArgumentParser in the experiment  python script file main entry point.
 
-### YAML fields documentation:
+### YAML Experiment fields documentation
 
 - **experiment_name**: is the name of the Experiment or the Pipeline to run as an Experiment on AML
 - **tenant_id**: Azure Tenant Id to connect to
@@ -218,37 +251,57 @@ parameters:
         - **account_key**: is the security key to access the "account_name" Azure Blob Storage
 - parameters: list of parameter name and value touples to pass to the experiments.
 
-## YAML Configuration file for Pipeline
+## Pipeline
+
+### What is a Pipeline?
+
+An Machine Learning pipeline is an independently executable workflow of a complete machine learning operation. Individual tasks are encapsulated as a series of **steps** within the pipeline.
+
+An Azure Machine Learning Pipeline can be as simple as one that calls a single Python script, just like an Experiment, or as a flow of tasks such as:
+
+- Data preparation including importing, validating and cleaning, munging and transformation, normalization, and staging
+- Training configuration including parameterizing arguments, file paths, and logging / reporting configurations
+- Training and validating efficiently and repeatedly. Efficiency might come from specifying specific data subsets, different hardware compute resources, distributed processing, and progress monitoring
+- Deployment, including versioning, scaling, provisioning, and access control
+
+In the AML SDK, a pipeline is represented by the Pipeline. When creating and running a Pipeline object, the following high-level steps occur:
+
+- For each step, the service calculates requirements for:
+  - Hardware compute resources
+  - OS resources (Docker image(s))
+  - Software resources (Conda / virtualenv dependencies)
+  - Data inputs
+- The service determines the dependencies between steps, resulting in a dynamic execution graph
+  - When each node in the execution graph runs:
+  - The service configures the necessary hardware and software environment (perhaps reusing existing resources)
+  - The step runs, providing logging and monitoring information to its containing Experiment object
+  - When the step completes, its outputs are prepared as inputs to the next step and/or written to storage
+  - Resources that are no longer needed are finalized and detached
+
+A Pipeline object contains an ordered sequence of one or more PipelineStep objects.  Each PipelineStep object is configured reusing the same concepts described above for defining DataStorage, DataReference, DataSet, Python environment and script folder and main script file.
+
+Finally, Pipeline are submitted for execution to run on a AML Compute environment  as part of an Experiment.
+
+### Modularity and Transparent execution of Steps as Experiments or full Pipeline
+
+A fundamental element in the design of the **azmlops** tool is the complete reusability of the Python script files and folders that could be transparently reused and submitted as individual Experiment or as sequence of steps of a more complex Pipeline.
+
+### YAML Configuration file for Pipeline
+
+This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run a Pipeline in AML:
+
+- A pipeline name
+- ...
 
 [WORK IN PROGRESS]
 
-## Install
+> Example of a pipeline YAML configuration file reusing the same  *prepare_data* sample script used in an Experiment above:
 
-```bash
-$ pip install azmlops
+```yaml
+---
+[WORK IN PROGRESS]
 ```
 
-## Command line tool usage
+### YAML Pipeline fields documentation
 
-This tool receive as single input parameter the path to the YAML file containing the configuration of the Experiment to run.  If executed without parameter it will prompt for inputing the path of the YAM file.
-
-```bash
-$ azmlops --help
-$ azmlops experiment path_to_experiment_config.yaml
-$ azmlops pipeline path_to_pipeline_config.yaml
-```
-
-Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of the Experiment.
-
-## Implementation
-
-This tool is implemented in Python 3.7 and it use the Azure ML Python SDK to create and submit data connection and scripts to an AML Compute environment such as a Azure Batch cluster or a VM.
-
-This tool depends on the following requirements:
-
-```text
-azureml
-azureml-core
-click
-pyyaml
-```
+[WORK IN PROGRESS]
