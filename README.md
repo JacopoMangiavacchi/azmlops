@@ -239,11 +239,10 @@ parameters:
 - **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.  Other optional values could be for example "cpucluster" or "dlcluser" (for GPU requirements).
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
 - scripts: contain path to the script folder and the name of the main script file in that folder
-- **datastores**: contain the list of all datastore, datareference and dataset to be created for the experiment.
-    - the following fields are **mandatory**:
+- **datastores**: contain the list of all input and output datastore, datareference and dataset to be created for the experiment.
+    - the following fields are **mandatory** for each datastore:
         - **data_store_name**: unique name in the context of a AML Workspace to identify a DataStore
         - **parameter_name**: name of the parameter to be passed to the main python script file of the experiment for the mounting path associated to the corresponding DataReference or DataSet
-        - **readonly**: boolean value. If True it create an immutable DataSet. If False it create a read and write DataReference.
     - the following fields are **optional** for DataStore creation:
         - **register**: true
         - **container_name**: name of the Blog Storage container to be registered for the DataStore
