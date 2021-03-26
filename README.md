@@ -305,3 +305,23 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 ### YAML Pipeline fields documentation
 
 [WORK IN PROGRESS]
+
+## CI/CD Integration
+
+While you can use different kind of pipelines like Azure DevOps or GitHub Actions for CI/CD automation of ML tasks, that type of pipeline is not deeply integrated or stored in Azure ML Workspace.
+
+**azmlops** is completely agnostic to any particular integration with CI/CD pipelines but at the same time it has been designed with the specific goal of simplifying and optimizing the integration on both testing and deploying phases on Azure DevOps, GitHub Actions and any similar tool.
+
+### Continuous Integration
+
+#### Unit Test
+
+[WORK IN PROGRESS]
+
+#### Integration Test
+
+[WORK IN PROGRESS]
+
+### Continuous Deployment
+
+[WORK IN PROGRESS]
