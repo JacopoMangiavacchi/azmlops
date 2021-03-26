@@ -1,5 +1,7 @@
 ---
 name: Test_Experiment_Script
+tenant_id: tenantid
+force_login: False
 workspace:
   subscription_id: subscription_id
   resource_group: resource_group
@@ -15,22 +17,22 @@ scripts:
   folder: experiment_scripts
   main: main.py
 datastores:
-  - data_store_name: input_datastore
-    container_name: container
-    mount_path: input
-    parameter_name: input_path
-    readonly: true
-    register: true
-    account_name: account
-    account_key: xxx
-  - data_store_name: output_datastore
-    container_name: container
-    mount_path: output
-    parameter_name: output_path
-    readonly: false
-    register: true
-    account_name: account
-    account_key: xxx
+  input:
+    - data_store_name: input_datastore
+      container_name: container
+      mount_path: input
+      parameter_name: input_path
+      register: true
+      account_name: account
+      account_key: xxx
+  output:
+    - data_store_name: output_datastore
+      container_name: container
+      mount_path: output
+      parameter_name: output_path
+      register: true
+      account_name: account
+      account_key: xxx
 parameters:
   input_file: test.txt
   output_file: test.txt
