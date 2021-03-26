@@ -213,6 +213,7 @@ data:
       container_name: container
       mount_path: input
       parameter_name: input_path
+      readonly: true
       register: true
       account_name: account
       account_key: xxx
@@ -247,6 +248,7 @@ parameters:
         - **data_store_name**: unique name in the context of a AML Workspace to identify a DataStore
         - **parameter_name**: name of the parameter to be passed to the main python script file of the experiment for the mounting path associated to the corresponding DataReference or DataSet
     - the following fields are **optional** for DataStore creation:
+        - **readonly**: boolean value. If True it create an immutable DataSet. If False it create a read and write DataReference.
         - **register**: true
         - **container_name**: name of the Blog Storage container to be registered for the DataStore
         - **account_name**: is the name of the Azure Blob Storage to use
