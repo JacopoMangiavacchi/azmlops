@@ -56,19 +56,26 @@ def connect_data(ws, configuration):
         for d in data["input"]:
             # Register Input DataStore
             register_datastore(ws, d)
-            
-            # Create Datasets for input Datastore
             d["datastore"] = Datastore(ws, d["data_store_name"])
-            d["dataset"] = Dataset.File.from_files(
-                path=(d["datastore"], d["mount_path"])
-            )
+            if "readonly" in d and d["readonly"] == True:
+                # Create Datasets for input Datastore
+                d["dataset"] = Dataset.File.from_files(
+                    path=(d["datastore"], d["mount_path"])
+                )
+            else:
+                # Create DataReference for output Datastore
+                d["datareference"] = DataReference(
+                    datastore=d["datastore"],
+                    data_reference_name=f"{d['data_store_name']}_reference",
+                    path_on_datastore=d["mount_path"]
+                )
 
     if "output" in data:
         for d in data["output"]:
             # Register Output DataStore
             register_datastore(ws, d)
-            # Create DataReference for output Datastore
             d["datastore"] = Datastore(ws, d["data_store_name"])
+            # Create DataReference for output Datastore
             d["datareference"] = DataReference(
                 datastore=d["datastore"],
                 data_reference_name=f"{d['data_store_name']}_reference",
