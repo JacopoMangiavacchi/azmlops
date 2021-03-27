@@ -1,6 +1,6 @@
 import sys
 import click
-from azmlops.aml_utilities import get_configuration, connect_workspace, register_datastores, connect_datastores, get_env, get_arguments, submit_experiment
+from azmlops.aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_experiment
 
 
 @click.group()
@@ -24,15 +24,15 @@ def experiment(**kwargs):
     # Connect to AML Workspace
     ws = connect_workspace(configuration)
 
-    # Connect and optionally Register Datastores
-    datastores = connect_datastores(ws, configuration)
+    # Connect and optionally Register Datastores, Dataset and Datareference
+    data = connect_data(ws, configuration)
 
     # Setup Environment to execute the experiment
     # writing temporary Env file
     env = get_env(configuration)
 
     # Create and Submit the AML Experiment
-    url = submit_experiment(ws, configuration, datastores, env)
+    url = submit_experiment(ws, configuration, data, env)
 
     click.echo(f"Experiment submitted: {url}")
 
