@@ -16,9 +16,10 @@ environment:
 scripts:
   folder: experiment_scripts
   main: main.py
-datastores:
+data:
   input:
-    - data_store_name: input_datastore
+    - name: input_data
+      data_store_name: input_datastore
       container_name: container
       mount_path: input
       parameter_name: input_path
@@ -26,7 +27,8 @@ datastores:
       account_name: account
       account_key: xxx
   output:
-    - data_store_name: output_datastore
+    - name: output_data
+      data_store_name: output_datastore
       container_name: container
       mount_path: output
       parameter_name: output_path
