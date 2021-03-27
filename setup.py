@@ -18,11 +18,12 @@ install_requires = [x.strip() for x in all_reqs if ('git+' not in x) and (
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs \
                     if 'git+' not in x]
 
+version = '0.0.4'
 
 setup(
  name = 'azmlops',
  description = 'Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML',
- version = '0.0.3',
+ version = version,
  packages = find_packages(), # list of all packages
  install_requires = install_requires,
  python_requires='>=2.7', # any python greater than 2.7
@@ -36,7 +37,7 @@ setup(
  long_description_content_type="text/markdown",
  license='MIT',
  url='https://github.com/JacopoMangiavacchi/azmlops',
- download_url='https://github.com/JacopoMangiavacchi/azmlops/archive/1.0.0.tar.gz',
+ download_url=f"https://github.com/JacopoMangiavacchi/azmlops/archive/{version}.tar.gz",
   dependency_links=dependency_links,
   author_email='jamangia@microsoft.com',
   classifiers=[
