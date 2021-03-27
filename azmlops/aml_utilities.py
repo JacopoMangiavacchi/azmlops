@@ -33,48 +33,49 @@ def connect_workspace(configuration):
         auth=interactive_auth
     )
 
-def register_datastores(ws, datastore):
+def register_datastore(ws, d):
     """
     Register a Datastore if register is True
     """
-    if "register" in datastore and datastore["register"] == True:
+    if "register" in d and d["register"] == True:
         Datastore.register_azure_blob_container(
             workspace=ws, 
-            datastore_name=datastore["data_store_name"],
-            container_name=datastore["container_name"],
-            account_name=datastore["account_name"],
-            account_key=datastore["account_key"],
+            datastore_name=d["data_store_name"],
+            container_name=d["container_name"],
+            account_name=d["account_name"],
+            account_key=d["account_key"],
             create_if_not_exists=False)
 
-def connect_datastores(ws, configuration):
+def connect_data(ws, configuration):
     """
-    Connect and optionally Register Datastores
+    Connect and optionally Register Datastore, DataReference and Dataset
     """
-    datastores = configuration["datastores"]
+    data = configuration["data"]
 
-    if "input" in datastores:
-        for datastore in datastores["input"]:
-            # Register Input DataStores
-            register_datastores(ws, datastore)
-            # Create Datasets for input Datastores
-            datastore["datastore"] = Datastore(ws, datastore["data_store_name"])
-            datastore["dataset"] = Dataset.File.from_files(
-                path=(datastore["datastore"], datastore["mount_path"])
+    if "input" in data:
+        for d in data["input"]:
+            # Register Input DataStore
+            register_datastore(ws, d)
+            
+            # Create Datasets for input Datastore
+            d["datastore"] = Datastore(ws, d["data_store_name"])
+            d["dataset"] = Dataset.File.from_files(
+                path=(d["datastore"], d["mount_path"])
             )
 
-    if "output" in datastores:
-        for datastore in datastores["output"]:
-            # Register Output DataStores
-            register_datastores(ws, datastore)
-            # Create DataReference for output Datastores
-            datastore["datastore"] = Datastore(ws, datastore["data_store_name"])
-            datastore["datareference"] = DataReference(
-                datastore=datastore["datastore"],
-                data_reference_name=f"{datastore['data_store_name']}_reference",
-                path_on_datastore=datastore["mount_path"]
+    if "output" in data:
+        for d in data["output"]:
+            # Register Output DataStore
+            register_datastore(ws, d)
+            # Create DataReference for output Datastore
+            d["datastore"] = Datastore(ws, d["data_store_name"])
+            d["datareference"] = DataReference(
+                datastore=d["datastore"],
+                data_reference_name=f"{d['data_store_name']}_reference",
+                path_on_datastore=d["mount_path"]
             )
 
-    return datastores
+    return data
 
 def get_env(configuration):
     """
@@ -91,21 +92,21 @@ def get_env(configuration):
         )
     return env
 
-def get_arguments(configuration, datastores):
+def get_arguments(configuration, data):
     """
     Create script arguments based on Configuration loaded from Experiment_Config
     """
     arguments = []
 
-    if "input" in datastores:
-        for datastore in datastores["input"]:
-            arguments.append(f"--{datastore['parameter_name']}")
-            arguments.append(datastore["dataset"].as_named_input(f"{datastore['data_store_name']}_input").as_mount())
+    if "input" in data:
+        for d in data["input"]:
+            arguments.append(f"--{d['parameter_name']}")
+            arguments.append(d["dataset"].as_named_input(f"{d['data_store_name']}_input").as_mount())
 
-    if "output" in datastores:
-        for datastore in datastores["output"]:
-            arguments.append(f"--{datastore['parameter_name']}")
-            arguments.append(str(datastore["datareference"]))
+    if "output" in data:
+        for d in data["output"]:
+            arguments.append(f"--{d['parameter_name']}")
+            arguments.append(str(d["datareference"]))
 
     if "parameters" in configuration:
         for parameter in configuration["parameters"].items():
@@ -114,7 +115,7 @@ def get_arguments(configuration, datastores):
 
     return arguments
 
-def submit_experiment(ws, configuration, datastores, env):
+def submit_experiment(ws, configuration, data, env):
     """
     Create and Submit the AML Experiment
     """
@@ -128,13 +129,13 @@ def submit_experiment(ws, configuration, datastores, env):
     job = ScriptRunConfig(
         source_directory = configuration["scripts"]["folder"],
         script = configuration["scripts"]["main"],
-        arguments = get_arguments(configuration, datastores),
+        arguments = get_arguments(configuration, data),
         compute_target = cluster)
 
     # Connect DataReferences
-    if "output" in datastores:
-        for datastore in datastores["output"]:
-            job.run_config.data_references[datastore["datareference"].data_reference_name] = datastore["datareference"].to_config()
+    if "output" in data:
+        for d in data["output"]:
+            job.run_config.data_references[d["datareference"].data_reference_name] = d["datareference"].to_config()
 
     # Config Environment
     job.run_config.environment = env
