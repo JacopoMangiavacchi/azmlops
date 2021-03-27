@@ -191,7 +191,7 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 ---
 name: Test_Experiment_Script
 tenant_id: tenantid
-force_login: False
+force_login: false
 workspace:
   subscription_id: subscription_id
   resource_group: resource_group

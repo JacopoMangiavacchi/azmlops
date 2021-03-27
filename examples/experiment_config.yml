@@ -1,7 +1,7 @@
 ---
 name: Test_Experiment_Script
 tenant_id: tenantid
-force_login: False
+force_login: false
 workspace:
   subscription_id: subscription_id
   resource_group: resource_group
@@ -23,6 +23,7 @@ data:
       container_name: container
       mount_path: input
       parameter_name: input_path
+      readonly: true
       register: true
       account_name: account
       account_key: xxx
