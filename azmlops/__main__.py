@@ -1,24 +1,24 @@
 import sys
 import click
-from .aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_experiment
+from .aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_job
 
 
 @click.group()
 @click.version_option("1.0.0")
 def main():
-    """Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML"""
+    """Minimal MLOps CLI interface tool for submitting Job and Pipeline to Azure ML"""
     pass
 
 
 @main.command()
-@click.argument('experiment', required=True)
-def experiment(**kwargs):
-    """Submit an ML Experiment to an Azure ML Workspace"""
-    config = kwargs.get("experiment")
+@click.argument('job', required=True)
+def job(**kwargs):
+    """Submit an ML Job to an Azure ML Workspace"""
+    config = kwargs.get("job")
 
-    click.echo(f"Submitting Experiment {config} ...")
+    click.echo(f"Submitting Job {config} ...")
 
-    # Open Experiment Config YAML file
+    # Open Job Config YAML file
     configuration = get_configuration(config)
 
     # Connect to AML Workspace
@@ -27,14 +27,15 @@ def experiment(**kwargs):
     # Connect and optionally Register Datastores, Dataset and Datareference
     data = connect_data(ws, configuration)
 
-    # Setup Environment to execute the experiment
+    # Setup Environment to execute the job
     # writing temporary Env file
     env = get_env(configuration)
 
-    # Create and Submit the AML Experiment
-    url = submit_experiment(ws, configuration, data, env)
+    # Create and Submit the Job as AML Experiment
+    url = submit_job(ws, configuration, data, env)
 
-    click.echo(f"Experiment submitted: {url}")
+    click.echo("Job submitted")
+    click.echo(f"Experiment URL: {url}")
 
 
 

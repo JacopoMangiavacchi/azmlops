@@ -7,7 +7,7 @@ from azureml.core.authentication import InteractiveLoginAuthentication
 
 def get_configuration(config):
     """
-    Open Experiment Config YAML file
+    Open Config YAML file
     """
     with open(config) as f:
         configuration = yaml.load(f, Loader=yaml.FullLoader)
@@ -88,7 +88,7 @@ def connect_data(ws, configuration):
 
 def get_env(configuration):
     """
-    Setup Environment to execute the experiment
+    Setup Environment to execute the job
     writing temporary Env file
     """
     with tempfile.NamedTemporaryFile(delete=True) as fp:
@@ -103,7 +103,7 @@ def get_env(configuration):
 
 def get_arguments(configuration, data):
     """
-    Create script arguments based on Configuration loaded from Experiment_Config
+    Create script arguments based on Configuration
     """
     arguments = []
 
@@ -127,9 +127,9 @@ def get_arguments(configuration, data):
 
     return arguments
 
-def submit_experiment(ws, configuration, data, env):
+def submit_job(ws, configuration, data, env):
     """
-    Create and Submit the AML Experiment
+    Create and Submit the Job as AML Experiment
     """
     # Connect to Compute Cluster or VM
     cluster = ws.compute_targets[configuration["compute_name"]]
