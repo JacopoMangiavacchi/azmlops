@@ -1,6 +1,6 @@
 import sys
 import click
-from azmlops.aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_experiment
+from .aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_experiment
 
 
 @click.group()

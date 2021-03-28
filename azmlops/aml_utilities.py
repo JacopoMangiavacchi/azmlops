@@ -63,6 +63,7 @@ def connect_data(ws, configuration):
                     path=(d["datastore"], d["mount_path"])
                 )
             else:
+                d["readonly"] == False
                 # Create DataReference for output Datastore
                 d["datareference"] = DataReference(
                     datastore=d["datastore"],
@@ -75,6 +76,7 @@ def connect_data(ws, configuration):
             # Register Output DataStore
             register_datastore(ws, d)
             d["datastore"] = Datastore(ws, d["data_store_name"])
+            d["readonly"] == False
             # Create DataReference for output Datastore
             d["datareference"] = DataReference(
                 datastore=d["datastore"],
@@ -108,7 +110,10 @@ def get_arguments(configuration, data):
     if "input" in data:
         for d in data["input"]:
             arguments.append(f"--{d['parameter_name']}")
-            arguments.append(d["dataset"].as_named_input(f"{d['data_store_name']}_input").as_mount())
+            if d["readonly"] == True:
+                arguments.append(d["dataset"].as_named_input(f"{d['data_store_name']}_input").as_mount())
+            else:
+                arguments.append(str(d["datareference"]))
 
     if "output" in data:
         for d in data["output"]:
@@ -140,6 +145,10 @@ def submit_experiment(ws, configuration, data, env):
         compute_target = cluster)
 
     # Connect DataReferences
+    if "input" in data:
+        for d in data["input"]:
+            if d["readonly"] == False:
+                job.run_config.data_references[d["datareference"].data_reference_name] = d["datareference"].to_config()
     if "output" in data:
         for d in data["output"]:
             job.run_config.data_references[d["datareference"].data_reference_name] = d["datareference"].to_config()
