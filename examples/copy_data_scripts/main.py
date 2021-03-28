@@ -2,7 +2,7 @@ from azureml.core import Run
 from os import makedirs, path
 from shutil import copyfile
 
-def prepare_data(input_file_path, output_file_path, run):
+def copy_data(input_file_path, output_file_path, run):
     """
     Copy input file to output file
     """
@@ -38,6 +38,6 @@ if __name__ == "__main__":
     print(f"Output file: {output_file_path}")
     
     # Call experiment entry point
-    prepare_data(input_file_path, output_file_path, RUN)
+    copy_data(input_file_path, output_file_path, RUN)
 
     RUN.complete()
