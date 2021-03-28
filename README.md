@@ -1,16 +1,16 @@
 # azmlops - MLOps in a Script for Azure ML
 
-Minimal MLOps CLI interface tool for submitting Experiments and Pipelines to Azure ML.
+Minimal MLOps CLI interface tool for submitting Job and Pipeline to Azure ML.
 
 ## Introduction
 
-**azmlops** is a minimal MLOps command line interface (CLI) tool to easily submit Azure ML (AML) Experiments and Pipelinse and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
+**azmlops** is a minimal MLOps command line interface (CLI) tool to easily submit to Azure ML (AML) Job and Pipeline as AML Experiments and automatically register DataStore and mount these as DataReference and/or Datasets passed as parameters to the Python scripts to be executed with the AML Experiment.
 
-The intent of the tool is to provide an easy and fully **declarative** and **modular** approach to create and submit AML Experiments and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments and Pipelines on an AML Compute environment connected to one or more DataStores.
+The intent of the tool is to provide an easy and fully **declarative** and **modular** approach to create and submit Job and Pipeline using a single source of truth to configure all the information needed to run completely parametrized Experiments on an AML Compute environment connected to one or more DataStores.
 
-This tool also implement a mechanism for optionally protecting **data immutability** while executing Experiments and Pipelines allowing to run different parametric experimentations with the certainty to always feed the same original input data.
+This tool also implement a mechanism for optionally protecting **data immutability** while executing Jobs and Pipelines allowing to run different parametric experimentations with the certainty to always feed the same original input data.
 
-Other main reasons for the development of this tool have been the transparent support for **local test** of experiments and pipeline steps, reducing friction both in execution time and debugging, and the **transparent** capacity to being able to **run full pipelines or to manually submit individual steps** of a pipeline as independent experiments, with no need of reconfiguration or any code changes.
+Other main reasons for the development of this tool have been the transparent support for **local test** of jobs and pipeline steps, reducing friction both in execution time and debugging, and the **transparent** capacity to being able to **run full pipelines or to manually submit individual steps** of a pipeline as independent experiments, with no need of reconfiguration or any code changes.
 
 ## Install
 
@@ -20,11 +20,11 @@ $ pip install azmlops
 
 ## Command line tool usage
 
-This tool receive as single input parameter the path to the YAML file containing the configuration of the Experiment to run.  If executed without parameter it will prompt for inputing the path of the YAM file.
+This tool receive as single input parameter the path to the YAML file containing the configuration of the Job or Pipeline to run.
 
 ```bash
 $ azmlops --help
-$ azmlops experiment path_to_experiment_config.yaml
+$ azmlops job path_to_job_config.yaml
 $ azmlops pipeline path_to_pipeline_config.yaml
 ```
 
@@ -65,10 +65,10 @@ This is the core of the experiment that we want to run in the AML workspace.
 
 >As an example we can start thinking about a simulation of a data preparation experiment that simply need to copy an input file to an output file.
 
-The python snapshot below implement a simple function that we can easily test locally on any python environment.  This *prepare_data* function will receive as parameter both the path of the input and output files. In the implementation it will dump on stdout the content of the input file, it will create necessary folders and subfolder for the output file and it finally copy the input file on the output file.
+The python snapshot below implement a simple function that we can easily test locally on any python environment.  This *copy_data* function will receive as parameter both the path of the input and output files. In the implementation it will dump on stdout the content of the input file, it will create necessary folders and subfolder for the output file and it finally copy the input file on the output file.
 
 ```python
-def prepare_data(input_file_path, output_file_path):
+def copy_data(input_file_path, output_file_path):
     """Copy input file to output file"""
     with open(input_file_path, 'r') as reader:
         print(f"Input file Data: {reader.read()}")
@@ -79,23 +79,23 @@ def prepare_data(input_file_path, output_file_path):
 
 Once we test locally this function we may want to eventually create and submit this code to AML as an Experiment and connect the input and output path parameter to some specific Azure Storage that will contain the real data we want to use for running our experiment.
 
-In order to execute the *prepare_data* function above in the context of an Experiment we need to first encapsulate this function in the context of a python script file.
+In order to execute the *copy_data* function above in the context of an Experiment we need to first encapsulate this function in the context of a python script file.
 
 In the main entry point of our script we will use then the standard python ArgumentParser to receive arguments for the following information:
 
 - **--input_path**: the path to the Azure Storage containing the input data we want to connect to the AML Compute environment when running the experiment
 - **--output_path**: the path to the Azure Storage containing the output data we want to connect to the AML Compute environment when running the experiment
-- **--input_file**: the path to the specific file in input_path we want to pass as input to our *prepare_data* function
-- **--output_file**: the path to the specific file in output_path we want to pass as output to our *prepare_data* function
+- **--input_file**: the path to the specific file in input_path we want to pass as input to our *copy_data* function
+- **--output_file**: the path to the specific file in output_path we want to pass as output to our *copy_data* function
 
-In the snapshot below you can see the full main script and how the arguments are parsed, the input and output path concatenated and finally passed to the *prepare_data* function.
+In the snapshot below you can see the full main script and how the arguments are parsed, the input and output path concatenated and finally passed to the *copy_data* function.
 
 ```python
 from azureml.core import Run
 from os import makedirs, path
 from shutil import copyfile
 
-def prepare_data(input_file_path, output_file_path, run):
+def copy_data(input_file_path, output_file_path, run):
     """Copy input file to output file"""
     with open(input_file_path, 'r') as reader:
         print(f"Input file Data: {reader.read()}")
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     output_file_path = f"{ARGS.output_path}/{ARGS.output_file}"
     
     # Call experiment entry point
-    prepare_data(input_file_path, output_file_path, RUN)
+    copy_data(input_file_path, output_file_path, RUN)
 
     RUN.complete()
 ```
@@ -182,7 +182,7 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 - The path to the script folder and the main script file in that folder that implement the code of the experiment
 - The list of input and output datastores, in term of DataSet and DataReference to be created and mounted in the AML Compute environment when running the experiment
 
-> Example of the experiment YAML configuration file needed for the *prepare_data* sample above:
+> Example of the experiment YAML configuration file needed for the *copy_data* sample above:
 
 ```yaml
 ---
@@ -296,7 +296,7 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 
 [WORK IN PROGRESS]
 
-> Example of a pipeline YAML configuration file reusing the same  *prepare_data* sample script used in an Experiment above:
+> Example of a pipeline YAML configuration file reusing the same  *copy_data* sample script used in an Experiment above:
 
 ```yaml
 ---
