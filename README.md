@@ -28,11 +28,11 @@ $ azmlops job path_to_job_config.yaml
 $ azmlops pipeline path_to_pipeline_config.yaml
 ```
 
-Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of Experiment or Pipeline.
+Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of Experiments about the submitted Jobs or Pipelines.
 
 ## Implementation
 
-This tool is implemented in Python 3.7 and it use the Azure ML Python SDK to create and submit data connection and scripts to an AML Compute environment such as a Azure Batch cluster or a VM.
+This tool is implemented in Python 3.8 and it use the Azure ML Python SDK to create and submit data connection and scripts to an AML Compute environment such as a Azure Batch cluster or a VM.
 
 This tool depends on the following requirements:
 
@@ -43,50 +43,51 @@ click
 pyyaml
 ```
 
-## Experiment
+## Job, Pipeline and Experiment
 
 ### What is an Experiment?
 
-An Azure Machine Learning (AML) Experiment represent the collection of trials used to validate a user's hypothesis.
+An Azure Machine Learning (AML) Experiment represent the collection of *trials* used to validate a user's hypothesis. In the AML SDK, an experiment is represented by the Experiment class and a trial is represented by the Run class.
 
-In the AML SDK, an experiment is represented by the Experiment class and a trial is represented by the Run class.
+A *trial* is some specific Python code a data scientist want to submit for execution to an AML Workspace in order to observe/document log, metric and results through the AML Studio Experiment view.
 
-In order to submit an experiment trial for execution to run on a AML Compute environment the following information must be passed to the Experiment object:
+An *Experiment trial* could be a specific **job** described by a single python script or a more complex **pipeline** defining a flow of different jobs to be coordinate as a single end to end experiment.
 
-- a main python script file containing the experiment code to run
+### Submit a Job Experiment
+
+In order to submit a *Job Experiment trial* for execution to run on a AML Compute environment the following information must be passed to the AML Workspace:
+
+- a main python script file containing the Job code to run
 - other optional pythons scripts imported in the main script flow and saved in the same folder
-- a definition of the environments and references used by the python scripts
-- a list of datastores necessary to execute the script in terms of input and optionally output data necessary to execute the experiment
+- a definition of the environment and references used by the python scripts
+- a list of datastores necessary to execute the script in terms of input and optionally output data necessary to execute the job
 - optional parameters to pass to the script
 
-### Python experiment script (an example)
+### Python Job script (an example)
 
-This is the core of the experiment that we want to run in the AML workspace.
+This is the core of the *Job Experiment trial* that we want to run in the AML workspace.
 
->As an example we can start thinking about a simulation of a data preparation experiment that simply need to copy an input file to an output file.
+>As an example we can start thinking about a simulation of a data preparation job that simply need to copy an input file to an output file.
 
-The python snapshot below implement a simple function that we can easily test locally on any python environment.  This *copy_data* function will receive as parameter both the path of the input and output files. In the implementation it will dump on stdout the content of the input file, it will create necessary folders and subfolder for the output file and it finally copy the input file on the output file.
+The python snapshot below implement a simple function that we can easily test locally on any python environment.  This *copy_data* function will receive as parameter both the full path of the input and output files. In the implementation it will create necessary folders and subfolder for the output file and it will finally copy the input file on the output file.
 
 ```python
 def copy_data(input_file_path, output_file_path):
     """Copy input file to output file"""
-    with open(input_file_path, 'r') as reader:
-        print(f"Input file Data: {reader.read()}")
-
     makedirs(path.dirname(output_file_path), exist_ok=True)
     copyfile(input_file_path, output_file_path)
 ```
 
-Once we test locally this function we may want to eventually create and submit this code to AML as an Experiment and connect the input and output path parameter to some specific Azure Storage that will contain the real data we want to use for running our experiment.
+Once we test locally this function we may want to eventually create and submit this code to AML as an *Job Experiment* and connect the input and output path parameter to some specific Azure Storage that will contain the real data we want to use for running our job.
 
-In order to execute the *copy_data* function above in the context of an Experiment we need to first encapsulate this function in the context of a python script file.
+In order to execute the *copy_data* function above in the context of a Job Experiment we need to first encapsulate this function in the context of a python script file and parse the parametric information we need.
 
-In the main entry point of our script we will use then the standard python ArgumentParser to receive arguments for the following information:
+In the main entry point of our script we will use the standard python ArgumentParser to receive arguments for the following information:
 
-- **--input_path**: the path to the Azure Storage containing the input data we want to connect to the AML Compute environment when running the experiment
-- **--output_path**: the path to the Azure Storage containing the output data we want to connect to the AML Compute environment when running the experiment
-- **--input_file**: the path to the specific file in input_path we want to pass as input to our *copy_data* function
-- **--output_file**: the path to the specific file in output_path we want to pass as output to our *copy_data* function
+- **--input_path**: the path to the Azure Storage containing the input data we want to connect to the AML Compute environment when running the job
+- **--output_path**: the path to the Azure Storage containing the output data we want to connect to the AML Compute environment when running the job
+- **--input_file**: the name of the specific file in input_path we want to pass as input to our *copy_data* function
+- **--output_file**: the name of the specific file in output_path we want to pass as output to our *copy_data* function
 
 In the snapshot below you can see the full main script and how the arguments are parsed, the input and output path concatenated and finally passed to the *copy_data* function.
 
@@ -97,9 +98,6 @@ from shutil import copyfile
 
 def copy_data(input_file_path, output_file_path, run):
     """Copy input file to output file"""
-    with open(input_file_path, 'r') as reader:
-        print(f"Input file Data: {reader.read()}")
-
     makedirs(path.dirname(output_file_path), exist_ok=True)
     copyfile(input_file_path, output_file_path)
         
@@ -108,33 +106,32 @@ if __name__ == "__main__":
     RUN = Run.get_context()
 
     # Get Parameters
-    PARSER = argparse.ArgumentParser("experiment")
+    PARSER = argparse.ArgumentParser("job")
     PARSER.add_argument("--input_path", type=str, help="input folder", required=True)
     PARSER.add_argument("--output_path", type=str, help="output folder", required=True)
     PARSER.add_argument("--input_file", type=str, help="input file name", required=True)
     PARSER.add_argument("--output_file", type=str, help="output file name", required=True)
-
     ARGS = PARSER.parse_args()
     
     # Prepare full file paths
     input_file_path = f"{ARGS.input_path}/{ARGS.input_file}"
     output_file_path = f"{ARGS.output_path}/{ARGS.output_file}"
     
-    # Call experiment entry point
+    # Call job entry point
     copy_data(input_file_path, output_file_path, RUN)
 
     RUN.complete()
 ```
 
-> Advise: the main python script file and the optional other python files used for the experiment should be saved in a specific folder.
+> Advise: the main python script file and the optional other python files used for the job experiment should be saved in a specific folder.
 
-### How an AML Experiment connect to data
+### How an AML Job Experiment connect to data
 
-When executing Experiments and Pipelines AML has the capacity to mount on Compute engines, independently if VM or Cluster, a virtual file system extension that connect through the Linux FUSE kernel module to any configurable Azure Blob Storage.
+When executing Jobs and Pipelines as Experiments the AML platform has the capacity to *mount* on Compute engines, independently if VM or Cluster, a virtual file system extension that connect through the Linux FUSE kernel module to any configurable Azure Blob Storage.
 
-This way with the AML SDK it is possible to transparently instruct an Experiment to mount Blog Storage paths and reference to any file contained in it as local file from the Experiment script code.
+This way with the AML SDK it is possible to transparently instruct a Job or a Pipeline Step to mount Blog Storage paths and reference to any file contained in it as local file from the Job script code.
 
-This basically avoid to use specific Azure Storage API in the experiment script to download the data on the Compute engine and guarantee transparent migration of these scripts between local and experiment execution.
+This basically avoid to use specific Azure Storage API in the job or pipeline scripts to download the data on the Compute engine and guarantee transparent migration of these scripts between local and AML Compute Engine execution.
 
 DataStore, DataReference and DataSet are the main classes in the AML Python SDK to configure this feature.
 
@@ -142,9 +139,9 @@ DataStore, DataReference and DataSet are the main classes in the AML Python SDK 
 
 A DataStore represents a storage abstraction over an Azure Machine Learning storage account. It can be created interactively with the Azure Studio web interface or programmatically in Python with the DataStore class.
 
-Datastores are attached to workspaces and are used to store connection information to Azure storage services so you can refer to them in Experiments and Pipelines by name and don't need to remember the connection information and secret used to connect to the storage services.
+Datastores are attached to AML Workspaces and are used to store connection information to Azure Storage services so you can refer to them in Job and Pipeline Experiments by name and don't need to remember the connection information and secret used to connect to the storage services.
 
-Examples of supported Azure storage services that can be registered as datastores are:
+Examples of supported Azure Storage services that can be registered as Datastores are:
 
 - Azure Blob Container
 - Azure File Share
@@ -159,34 +156,34 @@ Examples of supported Azure storage services that can be registered as datastore
 
 ### DataReference
 
-A DataReference represents a specific path in a datastore and can be used to describe how and where data should be made available in an Experiment or Pipeline run.
+A DataReference represents a specific path in a datastore and can be used to describe how and where data should be made available in an Job or Pipeline Experiment to run.
 
-The path to the data in the datastore can be the root /, a directory within the datastore, or a file in the datastore.
+The path to the data in the datastore can be the root (/), a directory within the datastore, or a file in the datastore.
 
 ### DataSet
 
-As DataReference Dataset is a reference to data in a Datastore and it is created specifying a specific path to the root /, a directory within the datastore, or a file in the datastore.
+As DataReference Dataset is a reference to data in a Datastore and it is created specifying a specific path to the root (/), a directory within the datastore, or a file in the datastore.
 
-The main difference between a DataSet and a DataReference is that DataSet are mounted through the Linux FUSE kernel module as Read-only mounting path and therefor they guarantee the **data immutability** pattern when running Experiment and Pipelines.
+The main difference between a DataSet and a DataReference is that DataSet are mounted through the Linux FUSE kernel module as Read-only volume and therefor they guarantee the **data immutability** pattern when running Jobs and Pipelines.
 
-> The **azmlops** tool use DataSet for Input data and DataReference for output data.
+> The **azmlops** tool use DataSet or DataReference for Input data and DataReference for output data.
 
-### YAML Configuration file for Experiment
+### YAML Configuration file for Job
 
-This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run an Experiment in AML:
+This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run an Job as an Experiment in AML:
 
 - An experiment name
 - The AML Workspace connection information
 - The AML Compute to use to run the experiment
-- The python Environment to use to run the experiment and the list of dependencies
-- The path to the script folder and the main script file in that folder that implement the code of the experiment
-- The list of input and output datastores, in term of DataSet and DataReference to be created and mounted in the AML Compute environment when running the experiment
+- The python Environment to use to run the job and the list of dependencies
+- The path to the script folder and the main script file in that folder that implement the code of the job
+- The list of input and output datastores, in term of DataSet and DataReference to be created and mounted in the AML Compute environment when running the job experiment
 
-> Example of the experiment YAML configuration file needed for the *copy_data* sample above:
+> Example of the Job YAML configuration file needed for the *copy_data* sample above:
 
 ```yaml
 ---
-name: Test_Experiment_Script
+name: Copy_Data_Script
 tenant_id: tenantid
 force_login: false
 workspace:
@@ -201,7 +198,7 @@ environment:
   - pip:
     - azureml-defaults
 scripts:
-  folder: experiment_scripts
+  folder: copy_data_scripts
   main: main.py
 data:
   input:
@@ -228,37 +225,37 @@ parameters:
   output_file: test.txt
 ```
 
-> Note that the **parameter_name** and **parameters** keys correspond to the argument parsed with ArgumentParser in the experiment  python script file main entry point.
+> Note that the **parameter_name** and **parameters** keys correspond to the argument parsed with ArgumentParser in the Job python script file main entry point.
 
-### YAML Experiment fields documentation
+### YAML Job fields documentation
 
-- **experiment_name**: is the name of the Experiment or the Pipeline to run as an Experiment on AML
+- **experiment_name**: is the name of the Experiment to run this Job on AML
 - **tenant_id**: Azure Tenant Id to connect to
 - **force_login**: boolean value. If True force interactive login
-- **workspace**: contain information about how to connect to the AML Workspace. A config.json file with this information could be downloaded from the Azure Portal on the main configuration page of the AML Service.
-- **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.  Other optional values could be for example "cpucluster" or "dlcluser" (for GPU requirements).
+- **workspace**: contain information about how to connect to the AML Workspace. These information could be retrieved from the Azure Portal on the main configuration page of the AML Workspace instance.
+- **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
 - scripts: contain path to the script folder and the name of the main script file in that folder
-- **datastores**: contain the list of all input and output datastore, datareference and dataset to be created for the experiment.
+- **datastores**: contain the list of all input and output datastore, datareference and dataset to be created for the job experiment.
     - the following fields are **mandatory** for each datastore:
         - **name**: a unique name for the data. To be used for Pipeline I/O and step sequencing
         - **data_store_name**: unique name in the context of a AML Workspace to identify a DataStore
-        - **parameter_name**: name of the parameter to be passed to the main python script file of the experiment for the mounting path associated to the corresponding DataReference or DataSet
+        - **parameter_name**: name of the parameter to be passed to the main python script file of the job for the mounting path associated to the corresponding DataReference or DataSet
     - the following fields are **optional** for DataStore creation:
         - **readonly**: boolean value. If True it create an immutable DataSet. If False it create a read and write DataReference.
         - **register**: true
         - **container_name**: name of the Blog Storage container to be registered for the DataStore
         - **account_name**: is the name of the Azure Blob Storage to use
         - **account_key**: is the security key to access the "account_name" Azure Blob Storage
-- parameters: list of parameter name and value touples to pass to the experiments.
+- parameters: list of parameter name and value touples to pass to the job script.
 
 ## Pipeline
 
 ### What is a Pipeline?
 
-An Machine Learning pipeline is an independently executable workflow of a complete machine learning operation. Individual tasks are encapsulated as a series of **steps** within the pipeline.
+A Machine Learning pipeline is an independently executable workflow of a complete end to end machine learning operation. Individual jobs are encapsulated as a series of **steps** within the pipeline.
 
-An Azure Machine Learning Pipeline can be as simple as one that calls a single Python script, just like an Experiment, or as a flow of tasks such as:
+An Azure Machine Learning Pipeline can be as simple as one that calls a single Python script, just like a Job, or as a flow of different jobs or steps such as:
 
 - Data preparation including importing, validating and cleaning, munging and transformation, normalization, and staging
 - Training configuration including parameterizing arguments, file paths, and logging / reporting configurations
@@ -281,22 +278,22 @@ In the AML SDK, a pipeline is represented by the Pipeline. When creating and run
 
 A Pipeline object contains an ordered sequence of one or more PipelineStep objects.  Each PipelineStep object is configured reusing the same concepts described above for defining DataStorage, DataReference, DataSet, Python environment and script folder and main script file.
 
-Finally, Pipeline are submitted for execution to run on a AML Compute environment  as part of an Experiment.
+Finally, Pipeline are submitted for execution to run on a AML Compute environment as part of an Experiment.
 
 ### Modularity and Transparent execution of Steps as Experiments or full Pipeline
 
-A fundamental element in the design of the **azmlops** tool is the complete reusability of the Python script files and folders that could be transparently reused and submitted as individual Experiment or as sequence of steps of a more complex Pipeline.
+A fundamental element in the design of the **azmlops** tool is the complete reusability of Job resources such as the Python script files and folders that could be transparently reused and submitted as individual Job or as sequence of steps of a more complex Pipeline.
 
 ### YAML Configuration file for Pipeline
 
-This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run a Pipeline in AML:
+This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run a Pipeline as AML Experiment:
 
 - A pipeline name
 - ...
 
 [WORK IN PROGRESS]
 
-> Example of a pipeline YAML configuration file reusing the same  *copy_data* sample script used in an Experiment above:
+> Example of a pipeline YAML configuration file reusing the same  *copy_data* sample script used in an Job Experiment above:
 
 ```yaml
 ---

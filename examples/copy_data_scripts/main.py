@@ -6,8 +6,7 @@ def copy_data(input_file_path, output_file_path, run):
     """
     Copy input file to output file
     """
-    
-    run.log("Experiment Start", 1)
+    run.log("copy_data Job", 1)
     
     with open(input_file_path, 'r') as reader:
         print(f"Input file Data: {reader.read()}")
@@ -15,14 +14,14 @@ def copy_data(input_file_path, output_file_path, run):
     makedirs(path.dirname(output_file_path), exist_ok=True)
     copyfile(input_file_path, output_file_path)
         
-    run.log("Experiment End", 2)
+    run.log("copy_data Job", 2)
 
 
 if __name__ == "__main__":
     RUN = Run.get_context()
 
     # Get Parameters
-    PARSER = argparse.ArgumentParser("experiment")
+    PARSER = argparse.ArgumentParser("job")
     PARSER.add_argument("--input_path", type=str, help="input data", required=True)
     PARSER.add_argument("--output_path", type=str, help="output data", required=True)
     PARSER.add_argument("--input_file", type=str, help="input file name", required=True)
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     print(f"Input file: {input_file_path}")
     print(f"Output file: {output_file_path}")
     
-    # Call experiment entry point
+    # Call job entry point
     copy_data(input_file_path, output_file_path, RUN)
 
     RUN.complete()
