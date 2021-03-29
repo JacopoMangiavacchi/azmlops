@@ -18,7 +18,7 @@ Other main reasons for the development of this tool have been the transparent su
 $ pip install azmlops
 ```
 
-## Command line tool usage
+## Usage
 
 This tool receive as single input parameter the path to the YAML file containing the configuration of the Job or Pipeline to run.
 
@@ -202,22 +202,24 @@ scripts:
   main: main.py
 data:
   input:
-    - name: input_data
-      data_store_name: input_datastore
-      container_name: container
-      mount_path: input
-      parameter_name: input_path
-      readonly: true
+  - name: input_data
+    mount_path: input
+    parameter_name: input_path
+    readonly: true
+    datastore:
+      name: input_datastore
       register: true
+      container_name: container
       account_name: account
       account_key: xxx
   output:
-    - name: output_data
-      data_store_name: output_datastore
-      container_name: container
-      mount_path: output
-      parameter_name: output_path
+  - name: output_data
+    mount_path: output
+    parameter_name: output_path
+    datastore:
+      name: output_datastore
       register: true
+      container_name: container
       account_name: account
       account_key: xxx
 parameters:
