@@ -61,7 +61,7 @@ def connect_data(ws, data):
             path=(data["datastore_object"], data["mount_path"])
         )
     else:
-        data["readonly"] == False
+        data["readonly"] = False
         # Create DataReference for output Datastore
         data["datareference_object"] = DataReference(
             datastore=data["datastore_object"],
