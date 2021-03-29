@@ -40,49 +40,50 @@ def register_datastore(ws, d):
     if "register" in d and d["register"] == True:
         Datastore.register_azure_blob_container(
             workspace=ws, 
-            datastore_name=d["data_store_name"],
+            datastore_name=d["name"],
             container_name=d["container_name"],
             account_name=d["account_name"],
             account_key=d["account_key"],
             create_if_not_exists=False)
 
-def connect_data(ws, configuration):
+def connect_data(ws, data):
     """
-    Connect and optionally Register Datastore, DataReference and Dataset
+    Connect and optionally Register a Datastore, DataReference and Dataset
+    """
+    # Register DataStore
+    datastore = data["datastore"]
+    register_datastore(ws, datastore)
+    data["datastore_object"] = Datastore(ws, datastore["name"])
+
+    if "readonly" in data and data["readonly"] == True:
+        # Create Datasets for input Datastore
+        data["dataset_object"] = Dataset.File.from_files(
+            path=(data["datastore_object"], data["mount_path"])
+        )
+    else:
+        data["readonly"] == False
+        # Create DataReference for output Datastore
+        data["datareference_object"] = DataReference(
+            datastore=data["datastore_object"],
+            data_reference_name=f"{data['name']}_reference",
+            path_on_datastore=data["mount_path"]
+        )
+
+
+
+def connect_all_data(ws, configuration):
+    """
+    Connect and optionally Register all Datastore, DataReference and Dataset
     """
     data = configuration["data"]
 
     if "input" in data:
         for d in data["input"]:
-            # Register Input DataStore
-            register_datastore(ws, d)
-            d["datastore"] = Datastore(ws, d["data_store_name"])
-            if "readonly" in d and d["readonly"] == True:
-                # Create Datasets for input Datastore
-                d["dataset"] = Dataset.File.from_files(
-                    path=(d["datastore"], d["mount_path"])
-                )
-            else:
-                d["readonly"] == False
-                # Create DataReference for output Datastore
-                d["datareference"] = DataReference(
-                    datastore=d["datastore"],
-                    data_reference_name=f"{d['data_store_name']}_reference",
-                    path_on_datastore=d["mount_path"]
-                )
+            connect_data(ws, d)
 
     if "output" in data:
         for d in data["output"]:
-            # Register Output DataStore
-            register_datastore(ws, d)
-            d["datastore"] = Datastore(ws, d["data_store_name"])
-            d["readonly"] == False
-            # Create DataReference for output Datastore
-            d["datareference"] = DataReference(
-                datastore=d["datastore"],
-                data_reference_name=f"{d['data_store_name']}_reference",
-                path_on_datastore=d["mount_path"]
-            )
+            connect_data(ws, d)
 
     return data
 
@@ -111,14 +112,14 @@ def get_arguments(configuration, data):
         for d in data["input"]:
             arguments.append(f"--{d['parameter_name']}")
             if d["readonly"] == True:
-                arguments.append(d["dataset"].as_named_input(f"{d['data_store_name']}_input").as_mount())
+                arguments.append(d["dataset_object"].as_named_input(f"{d['datastore']['name']}_input").as_mount())
             else:
-                arguments.append(str(d["datareference"]))
+                arguments.append(str(d["datareference_object"]))
 
     if "output" in data:
         for d in data["output"]:
             arguments.append(f"--{d['parameter_name']}")
-            arguments.append(str(d["datareference"]))
+            arguments.append(str(d["datareference_object"]))
 
     if "parameters" in configuration:
         for parameter in configuration["parameters"].items():
@@ -148,10 +149,10 @@ def submit_job(ws, configuration, data, env):
     if "input" in data:
         for d in data["input"]:
             if d["readonly"] == False:
-                job.run_config.data_references[d["datareference"].data_reference_name] = d["datareference"].to_config()
+                job.run_config.data_references[d["datareference_object"].data_reference_name] = d["datareference_object"].to_config()
     if "output" in data:
         for d in data["output"]:
-            job.run_config.data_references[d["datareference"].data_reference_name] = d["datareference"].to_config()
+            job.run_config.data_references[d["datareference_object"].data_reference_name] = d["datareference_object"].to_config()
 
     # Config Environment
     job.run_config.environment = env

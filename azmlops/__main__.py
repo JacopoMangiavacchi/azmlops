@@ -1,6 +1,6 @@
 import sys
 import click
-from .aml_utilities import get_configuration, connect_workspace, connect_data, get_env, submit_job
+from .aml_utilities import get_configuration, connect_workspace, connect_all_data, get_env, submit_job
 
 
 @click.group()
@@ -25,7 +25,7 @@ def job(**kwargs):
     ws = connect_workspace(configuration)
 
     # Connect and optionally Register Datastores, Dataset and Datareference
-    data = connect_data(ws, configuration)
+    data = connect_all_data(ws, configuration)
 
     # Setup Environment to execute the job
     # writing temporary Env file
