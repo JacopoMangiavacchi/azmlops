@@ -19,23 +19,25 @@ scripts:
 data:
   input:
     - name: input_data
-      data_store_name: input_datastore
-      container_name: container
       mount_path: input
       parameter_name: input_path
       readonly: true
-      register: true
-      account_name: account
-      account_key: xxx
+      datastore:
+        name: input_datastore
+        register: true
+        container_name: container
+        account_name: account
+        account_key: xxx
   output:
     - name: output_data
-      data_store_name: output_datastore
-      container_name: container
       mount_path: output
       parameter_name: output_path
-      register: true
-      account_name: account
-      account_key: xxx
+      datastore:
+        name: output_datastore
+        register: true
+        container_name: container
+        account_name: account
+        account_key: xxx
 parameters:
   input_file: test.txt
   output_file: test.txt
