@@ -33,57 +33,72 @@ def connect_workspace(configuration):
         auth=interactive_auth
     )
 
-def register_datastore(ws, d):
+def register_datastore(ws, datastore):
     """
-    Register a Datastore if register is True
+    Register a Datastore if container_name, account_name and account_key are provided
     """
-    if "register" in d and d["register"] == True:
+    if "container_name" in datastore and "account_name" in datastore and "account_key" in datastore:
         Datastore.register_azure_blob_container(
             workspace=ws, 
-            datastore_name=d["name"],
-            container_name=d["container_name"],
-            account_name=d["account_name"],
-            account_key=d["account_key"],
+            datastore_name=datastore["name"],
+            container_name=datastore["container_name"],
+            account_name=datastore["account_name"],
+            account_key=datastore["account_key"],
             create_if_not_exists=False)
 
-def connect_data(ws, data):
+def connect_dataset(ws, dataset_type):
     """
-    Connect and optionally Register a Datastore, DataReference and Dataset
+    Connect a DataReference or Dataset and optionally register associated Datastore
     """
     # Register DataStore
-    datastore = data["datastore"]
+    datastore = dataset_type["datastore"]
     register_datastore(ws, datastore)
-    data["datastore_object"] = Datastore(ws, datastore["name"])
+    dataset_type["datastore_object"] = Datastore(ws, datastore["name"])
 
-    if "readonly" in data and data["readonly"] == True:
-        # Create Datasets for input Datastore
-        data["dataset_object"] = Dataset.File.from_files(
-            path=(data["datastore_object"], data["mount_path"])
-        )
-    else:
-        data["readonly"] = False
-        # Create DataReference for output Datastore
-        data["datareference_object"] = DataReference(
-            datastore=data["datastore_object"],
-            data_reference_name=f"{data['name']}_reference",
-            path_on_datastore=data["mount_path"]
-        )
+    # Create Datasets for input Datastore
+    dataset_type["dataset_object"] = Dataset.File.from_files(
+        path=(dataset_type["datastore_object"], dataset_type["mount_path"])
+    )
 
+def connect_datareference(ws, datareference_type):
+    """
+    Connect a DataReference or Dataset and optionally register associated Datastore
+    """
+    # Register DataStore
+    datastore = datareference_type["datastore"]
+    register_datastore(ws, datastore)
+    datareference_type["datastore_object"] = Datastore(ws, datastore["name"])
 
+    # Create DataReference for output Datastore
+    datareference_type["datareference_object"] = DataReference(
+        datastore=datareference_type["datastore_object"],
+        data_reference_name=f"{datareference_type['name']}_reference",
+        path_on_datastore=datareference_type["mount_path"]
+    )
+
+def connect_data(ws, data_type):
+    """
+    Connect a DataReference or Dataset and optionally register associated Datastore
+    """
+    if "dataset" in data_type:
+        connect_dataset(ws, data_type["dataset"])
+
+    if "datareference" in data_type:
+        connect_datareference(ws, data_type["datareference"])
 
 def connect_all_data(ws, configuration):
     """
-    Connect and optionally Register all Datastore, DataReference and Dataset
+    Connect DataReference and Dataset and optionally register associated Datastore
     """
     data = configuration["data"]
 
     if "input" in data:
-        for d in data["input"]:
-            connect_data(ws, d)
+        for data_type in data["input"]:
+            connect_data(ws, data_type)
 
     if "output" in data:
-        for d in data["output"]:
-            connect_data(ws, d)
+        for data_type in data["output"]:
+            connect_data(ws, data_type)
 
     return data
 
