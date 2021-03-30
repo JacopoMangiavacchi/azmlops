@@ -177,7 +177,7 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 - The AML Compute to use to run the experiment
 - The python Environment to use to run the job and the list of dependencies
 - The path to the script folder and the main script file in that folder that implement the code of the job
-- The list of input and output datastores, in term of DataSet and DataReference to be created and mounted in the AML Compute environment when running the job experiment
+- The list of input and output data, in terms of DataSet and DataReference, to be created and mounted in the AML Compute environment when running the job experiment
 
 > Example of the Job YAML configuration file needed for the *copy_data* sample above:
 
@@ -202,54 +202,58 @@ scripts:
   main: main.py
 data:
   input:
-  - name: input_data
-    mount_path: input
-    parameter_name: input_path
-    readonly: true
-    datastore:
-      name: input_datastore
-      register: true
-      container_name: container
-      account_name: account
-      account_key: xxx
+  - dataset:
+      name: input_data
+      parameter_name: input_path
+      mount_path: input
+      datastore:
+        name: input_datastore
   output:
-  - name: output_data
-    mount_path: output
-    parameter_name: output_path
-    datastore:
-      name: output_datastore
-      register: true
-      container_name: container
-      account_name: account
-      account_key: xxx
+  - datareference:
+      name: output_data
+      parameter_name: output_path
+      mount_path: output
+      datastore:
+        name: output_datastore
 parameters:
   input_file: test.txt
   output_file: test.txt
 ```
 
-> Note that the **parameter_name** and **parameters** keys correspond to the argument parsed with ArgumentParser in the Job python script file main entry point.
+> Note that the **parameter_name** (input_path, output_path) and **parameters** keys (input_file, output_file) correspond to the arguments parsed with ArgumentParser in the Job python script file main entry point.
+
+The **azmlops** tool can utilize datastores already registered to the AML Workspace or directly create and register new one passing to the datastore parameter of the YAML file above also the following information:
+
+```yaml
+...
+      datastore:
+        name: input_datastore
+        container_name: container
+        account_name: account
+        account_key: xxx
+...
+```
 
 ### YAML Job fields documentation
 
-- **experiment_name**: is the name of the Experiment to run this Job on AML
+- **name**: is the name of the Experiment to run this Job on AML
 - **tenant_id**: Azure Tenant Id to connect to
 - **force_login**: boolean value. If True force interactive login
 - **workspace**: contain information about how to connect to the AML Workspace. These information could be retrieved from the Azure Portal on the main configuration page of the AML Workspace instance.
 - **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
-- scripts: contain path to the script folder and the name of the main script file in that folder
-- **datastores**: contain the list of all input and output datastore, datareference and dataset to be created for the job experiment.
-    - the following fields are **mandatory** for each datastore:
-        - **name**: a unique name for the data. To be used for Pipeline I/O and step sequencing
-        - **data_store_name**: unique name in the context of a AML Workspace to identify a DataStore
-        - **parameter_name**: name of the parameter to be passed to the main python script file of the job for the mounting path associated to the corresponding DataReference or DataSet
-    - the following fields are **optional** for DataStore creation:
-        - **readonly**: boolean value. If True it create an immutable DataSet. If False it create a read and write DataReference.
-        - **register**: true
-        - **container_name**: name of the Blog Storage container to be registered for the DataStore
-        - **account_name**: is the name of the Azure Blob Storage to use
-        - **account_key**: is the security key to access the "account_name" Azure Blob Storage
-- parameters: list of parameter name and value touples to pass to the job script.
+- **scripts**: contain path to the script folder and the name of the main script file in that folder
+- **data**: contain the list of all input and output datareference / dataset and associated datastore to be created for the job experiment. Use *dataset* for unmutable input data and *datareference* for writable input or output data. 
+    - the following fields must be configured for each data element independently if *dataset* or *datareference*:
+        - **name**: a unique name for the data element. To be used for Pipeline I/O and step sequencing
+        - **parameter_name**: name of the parameter to be passed to the main python script file of the job for the mounting path associated to the corresponding *dataset* or *datareference*
+        - **mount_path**: the path to be used for mounting a specific folder of the associated *datastore*
+        - **datastore**: the associated datastore
+          - **name**: unique name in the context of a AML Workspace to identify a *datastore*
+          - **container_name**: name of the Blog Storage container to be registered for the DataStore
+          - **account_name**: is the name of the Azure Blob Storage to use
+          - **account_key**: is the security key to access the "account_name" Azure Blob Storage
+- **parameters**: list of parameter name and value touples to pass to the job script.
 
 ## Pipeline
 
