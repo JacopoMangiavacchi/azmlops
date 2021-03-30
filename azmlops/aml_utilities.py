@@ -124,17 +124,21 @@ def get_arguments(configuration, data):
     arguments = []
 
     if "input" in data:
-        for d in data["input"]:
-            arguments.append(f"--{d['parameter_name']}")
-            if d["readonly"] == True:
-                arguments.append(d["dataset_object"].as_named_input(f"{d['datastore']['name']}_input").as_mount())
+        for data_type in data["input"]:
+            if "dataset" in data_type:
+                dataset_type = data_type["dataset"]
+                arguments.append(f"--{dataset_type['parameter_name']}")
+                arguments.append(dataset_type["dataset_object"].as_named_input(f"{dataset_type['datastore']['name']}_input").as_mount())
             else:
-                arguments.append(str(d["datareference_object"]))
+                datareference_type = data_type["datareference"]
+                arguments.append(f"--{datareference_type['parameter_name']}")
+                arguments.append(str(datareference_type["datareference_object"]))
 
     if "output" in data:
-        for d in data["output"]:
-            arguments.append(f"--{d['parameter_name']}")
-            arguments.append(str(d["datareference_object"]))
+        for data_type in data["output"]:
+            datareference_type = data_type["datareference"]
+            arguments.append(f"--{datareference_type['parameter_name']}")
+            arguments.append(str(datareference_type["datareference_object"]))
 
     if "parameters" in configuration:
         for parameter in configuration["parameters"].items():
@@ -162,12 +166,15 @@ def submit_job(ws, configuration, data, env):
 
     # Connect DataReferences
     if "input" in data:
-        for d in data["input"]:
-            if d["readonly"] == False:
-                job.run_config.data_references[d["datareference_object"].data_reference_name] = d["datareference_object"].to_config()
+        for data_type in data["input"]:
+            if "datareference" in data_type:
+                datareference_type = data_type["datareference"]
+                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
     if "output" in data:
-        for d in data["output"]:
-            job.run_config.data_references[d["datareference_object"].data_reference_name] = d["datareference_object"].to_config()
+        for data_type in data["output"]:
+            if "datareference" in data_type:
+                datareference_type = data_type["datareference"]
+                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
 
     # Config Environment
     job.run_config.environment = env
