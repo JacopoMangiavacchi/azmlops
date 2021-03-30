@@ -18,26 +18,19 @@ scripts:
   main: main.py
 data:
   input:
-    - name: input_data
-      mount_path: input
+  - dataset:
+      name: input_data
       parameter_name: input_path
-      readonly: true
+      mount_path: input
       datastore:
         name: input_datastore
-        register: true
-        container_name: container
-        account_name: account
-        account_key: xxx
   output:
-    - name: output_data
-      mount_path: output
+  - datareference:
+      name: output_data
       parameter_name: output_path
+      mount_path: output
       datastore:
         name: output_datastore
-        register: true
-        container_name: container
-        account_name: account
-        account_key: xxx
 parameters:
   input_file: test.txt
   output_file: test.txt
