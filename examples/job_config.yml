@@ -1,12 +1,14 @@
 ---
 name: Copy_Data_Script
-tenant_id: tenantid
-force_login: false
-workspace:
-  subscription_id: subscription_id
-  resource_group: resource_group
-  workspace_name: workspace_name
-compute_name: cluster
+provider: 
+  azureml:
+    tenant_id: tenantid
+    force_login: false
+    workspace:
+      subscription_id: subscription_id
+      resource_group: resource_group
+      workspace_name: workspace_name
+    compute_name: cluster
 environment:
   name: experiment_env
   dependencies:

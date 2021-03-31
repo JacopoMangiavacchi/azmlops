@@ -184,13 +184,13 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 ```yaml
 ---
 name: Copy_Data_Script
-tenant_id: tenantid
-force_login: false
-workspace:
-  subscription_id: subscription_id
-  resource_group: resource_group
-  workspace_name: workspace_name
-compute_name: cluster
+provider: 
+  azureml:
+    workspace:
+      subscription_id: subscription_id
+      resource_group: resource_group
+      workspace_name: workspace_name
+    compute_name: cluster
 environment:
   name: experiment_env
   dependencies:
@@ -234,13 +234,31 @@ The **azmlops** tool can utilize datastores already registered to the AML Worksp
 ...
 ```
 
+ Azure Tenant Id and a boolean value to force interactive login can be also configured for the *azureml* provider configuration:
+
+```yaml
+...
+provider: 
+  azureml:
+    tenant_id: tenant_id
+    force_login: false
+    workspace:
+      subscription_id: subscription_id
+      resource_group: resource_group
+      workspace_name: workspace_name
+    compute_name: cluster
+...
+```
+
 ### YAML Job fields documentation
 
-- **name**: is the name of the Experiment to run this Job on AML
-- **tenant_id**: Azure Tenant Id to connect to
-- **force_login**: boolean value. If True force interactive login
-- **workspace**: contain information about how to connect to the AML Workspace. These information could be retrieved from the Azure Portal on the main configuration page of the AML Workspace instance.
-- **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.
+- **name**: is the name of the Experiment to run this Job
+- **provider**: *azmlops* is designed to potentially support different ML orchestrator such as Azure ML, KubeFlow or other providers.
+  - **azureml** is the only ML provider type supported at the moment. It require the following information:
+    - **tenant_id**: Azure Tenant Id to connect to
+    - **force_login**: boolean value. If True force interactive login
+    - **workspace**: contain information about how to connect to the AML Workspace. These information could be retrieved from the Azure Portal on the main configuration page of the AML Workspace instance.
+    - **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
 - **scripts**: contain path to the script folder and the name of the main script file in that folder
 - **data**: contain the list of all input and output datareference / dataset and associated datastore to be created for the job experiment. Use *dataset* for unmutable input data and *datareference* for writable input or output data. 
