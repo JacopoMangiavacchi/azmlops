@@ -17,19 +17,21 @@ def connect_workspace(configuration):
     """
     Connect to AML Workspace
     """
-    force = False
-    if "force_login" in configuration:
-        force = configuration["force_login"]
+    azureml = configuration["provider"]["azureml"]
 
-    if "tenant_id" in configuration:
-        interactive_auth = InteractiveLoginAuthentication(tenant_id=configuration["tenant_id"], force=force)
+    force = False
+    if "force_login" in azureml:
+        force = azureml["force_login"]
+
+    if "tenant_id" in azureml:
+        interactive_auth = InteractiveLoginAuthentication(tenant_id=azureml["tenant_id"], force=force)
     else:
         interactive_auth = None
 
     return Workspace(
-        subscription_id=configuration["workspace"]["subscription_id"],
-        resource_group=configuration["workspace"]["resource_group"],
-        workspace_name=configuration["workspace"]["workspace_name"],
+        subscription_id=azureml["workspace"]["subscription_id"],
+        resource_group=azureml["workspace"]["resource_group"],
+        workspace_name=azureml["workspace"]["workspace_name"],
         auth=interactive_auth
     )
 
