@@ -106,8 +106,6 @@ def connect_all_data(ws, configuration):
         if input_data_object["type"] == "datareference":
             data[data_name] = connect_datareference(ws, input_data_object)
 
-    print(data)
-
     return data
 
 def get_env(configuration):
@@ -130,26 +128,28 @@ def get_arguments(configuration, data):
     Create script arguments based on Configuration
     """
     arguments = []
+    job = configuration["job"]
 
-    if "input" in data:
-        for data_type in data["input"]:
-            if "dataset" in data_type:
-                dataset_type = data_type["dataset"]
-                arguments.append(f"--{dataset_type['parameter_name']}")
-                arguments.append(dataset_type["dataset_object"].as_named_input(f"{dataset_type['datastore']['name']}_input").as_mount())
+    if "inputs" in job:
+        for data_name in job["inputs"]:
+            data_object = data[data_name]
+
+            if data_object["type"] == "dataset":
+                arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
+                arguments.append(data_object["dataset_object"].as_named_input(f"{configuration["data"][data_name]['datastore']['name']}_input").as_mount())
             else:
-                datareference_type = data_type["datareference"]
-                arguments.append(f"--{datareference_type['parameter_name']}")
-                arguments.append(str(datareference_type["datareference_object"]))
+                arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
+                arguments.append(str(data_object["datareference_object"]))
 
-    if "output" in data:
-        for data_type in data["output"]:
-            datareference_type = data_type["datareference"]
-            arguments.append(f"--{datareference_type['parameter_name']}")
-            arguments.append(str(datareference_type["datareference_object"]))
+    if "outputs" in job:
+        for data_name in job["outputs"]:
+            data_object = data[data_name]
 
-    if "parameters" in configuration["job"]:
-        for parameter in configuration["job"]["parameters"].items():
+            arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
+            arguments.append(str(data_object["datareference_object"]))
+
+    if "parameters" in job:
+        for parameter in job["parameters"].items():
             arguments.append(f"--{parameter[0]}")
             arguments.append(parameter[1])
 
