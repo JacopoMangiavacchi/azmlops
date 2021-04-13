@@ -110,7 +110,7 @@ def get_env(configuration):
     writing temporary Env file
     """
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        environment = configuration["environment"]
+        environment = configuration["job"]["environment"]
         with open(fp.name, 'w') as outfile:
             yaml.dump(environment, outfile, default_flow_style=False)
         env = Environment.from_conda_specification(
@@ -142,8 +142,8 @@ def get_arguments(configuration, data):
             arguments.append(f"--{datareference_type['parameter_name']}")
             arguments.append(str(datareference_type["datareference_object"]))
 
-    if "parameters" in configuration:
-        for parameter in configuration["parameters"].items():
+    if "parameters" in configuration["job"]:
+        for parameter in configuration["job"]["parameters"].items():
             arguments.append(f"--{parameter[0]}")
             arguments.append(parameter[1])
 
@@ -161,8 +161,8 @@ def submit_job(ws, configuration, data, env):
 
     # Create the job
     job = ScriptRunConfig(
-        source_directory = configuration["scripts"]["folder"],
-        script = configuration["scripts"]["main"],
+        source_directory = configuration["job"]["scripts"]["folder"],
+        script = configuration["job"]["scripts"]["main"],
         arguments = get_arguments(configuration, data),
         compute_target = cluster)
 
