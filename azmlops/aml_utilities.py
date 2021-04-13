@@ -48,59 +48,65 @@ def register_datastore(ws, datastore):
             account_key=datastore["account_key"],
             create_if_not_exists=False)
 
-def connect_dataset(ws, dataset_type):
+def connect_dataset(ws, input_data_object):
     """
-    Connect a DataReference or Dataset and optionally register associated Datastore
+    Connect a Dataset and optionally register associated Datastore
     """
     # Register DataStore
-    datastore = dataset_type["datastore"]
+    datastore = input_data_object["datastore"]
     register_datastore(ws, datastore)
-    dataset_type["datastore_object"] = Datastore(ws, datastore["name"])
+    datastore_object = Datastore(ws, datastore["name"])
 
     # Create Datasets for input Datastore
-    dataset_type["dataset_object"] = Dataset.File.from_files(
-        path=(dataset_type["datastore_object"], dataset_type["mount_path"])
+    dataset_object = Dataset.File.from_files(
+        path=(datastore_object, input_data_object["mount_path"])
     )
 
-def connect_datareference(ws, datareference_type):
+    return { 
+        "type" : input_data_object["type"],
+        "datastore_object" : datastore_object,
+        "dataset_object" : dataset_object
+    }
+
+def connect_datareference(ws, input_data_object):
     """
-    Connect a DataReference or Dataset and optionally register associated Datastore
+    Connect a DataReference and optionally register associated Datastore
     """
     # Register DataStore
-    datastore = datareference_type["datastore"]
+    datastore = input_data_object["datastore"]
     register_datastore(ws, datastore)
-    datareference_type["datastore_object"] = Datastore(ws, datastore["name"])
+    datastore_object = Datastore(ws, datastore["name"])
 
     # Create DataReference for output Datastore
-    datareference_type["datareference_object"] = DataReference(
-        datastore=datareference_type["datastore_object"],
-        data_reference_name=f"{datareference_type['name']}_reference",
-        path_on_datastore=datareference_type["mount_path"]
+    datareference_object = DataReference(
+        datastore=datastore_object,
+        data_reference_name=f"{input_data_object['name']}_reference",
+        path_on_datastore=input_data_object["mount_path"]
     )
 
-def connect_data(ws, data_type):
-    """
-    Connect a DataReference or Dataset and optionally register associated Datastore
-    """
-    if "dataset" in data_type:
-        connect_dataset(ws, data_type["dataset"])
-
-    if "datareference" in data_type:
-        connect_datareference(ws, data_type["datareference"])
+    return { 
+        "type" : input_data_object["type"],
+        "datastore_object" : datastore_object,
+        "datareference_object" : datareference_object
+    }
 
 def connect_all_data(ws, configuration):
     """
     Connect DataReference and Dataset and optionally register associated Datastore
     """
-    data = configuration["data"]
+    data = {}
 
-    if "input" in data:
-        for data_type in data["input"]:
-            connect_data(ws, data_type)
+    for x in configuration["data"]:
+        x = list(x.items())[0]
+        data_name = x[0]
+        input_data_object = x[1]
+        if input_data_object["type"] == "dataset":
+            data[data_name] = connect_dataset(ws, input_data_object)
 
-    if "output" in data:
-        for data_type in data["output"]:
-            connect_data(ws, data_type)
+        if input_data_object["type"] == "datareference":
+            data[data_name] = connect_datareference(ws, input_data_object)
+
+    print(data)
 
     return data
 
