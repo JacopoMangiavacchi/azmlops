@@ -25,13 +25,13 @@ job:
     - pip:
       - azureml-defaults
 data:
-- input_data:
+  input_data:
     type: dataset
     parameter_name: input_path
     mount_path: input
     datastore:
       name: input_datastore
-- output_data:
+  output_data:
     type: datareference
     parameter_name: output_path
     mount_path: output
