@@ -108,13 +108,12 @@ def connect_all_data(ws, configuration):
 
     return data
 
-def get_env(configuration):
+def get_env(environment):
     """
     Setup Environment to execute the job
     writing temporary Env file
     """
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        environment = configuration["job"]["environment"]
         with open(fp.name, 'w') as outfile:
             yaml.dump(environment, outfile, default_flow_style=False)
         env = Environment.from_conda_specification(
@@ -169,7 +168,7 @@ def submit_job(ws, configuration, data):
 
     # Setup Environment to execute the job
     # writing temporary Env file
-    env = get_env(configuration)
+    env = get_env(job["environment"])
 
     # Create the AML Experiment
     experiment = Experiment(ws, configuration["name"])
@@ -206,6 +205,10 @@ def create_step(ws, configuration, data, job_name, job_data, cluster):
     """
     Create an AML Pipeline step
     """
+    # Setup Environment to execute the job
+    # writing temporary Env file
+    env = get_env(configuration["environments"][job_data["environment"]])
+
     # create a new runconfig object
     run_config = RunConfiguration()
 
