@@ -133,19 +133,21 @@ def get_arguments(configuration, data):
     if "inputs" in job:
         for data_name in job["inputs"]:
             data_object = data[data_name]
+            data_config = configuration["data"][data_name]
 
             if data_object["type"] == "dataset":
-                arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
-                arguments.append(data_object["dataset_object"].as_named_input(f"{configuration["data"][data_name]['datastore']['name']}_input").as_mount())
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
             else:
-                arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
+                arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(str(data_object["datareference_object"]))
 
     if "outputs" in job:
         for data_name in job["outputs"]:
             data_object = data[data_name]
+            data_config = configuration["data"][data_name]
 
-            arguments.append(f"--{configuration["data"][data_name]['parameter_name']}")
+            arguments.append(f"--{data_config['parameter_name']}")
             arguments.append(str(data_object["datareference_object"]))
 
     if "parameters" in job:
