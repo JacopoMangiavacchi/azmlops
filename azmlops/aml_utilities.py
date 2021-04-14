@@ -154,7 +154,7 @@ def get_arguments(configuration, data):
 
     return arguments
 
-def submit_job(ws, configuration, data, env):
+def submit_job(ws, configuration, data):
     """
     Create and Submit the Job as AML Experiment
     """
@@ -163,6 +163,10 @@ def submit_job(ws, configuration, data, env):
 
     # Connect to Compute Cluster or VM
     cluster = ws.compute_targets[azureml["compute_name"]]
+
+    # Setup Environment to execute the job
+    # writing temporary Env file
+    env = get_env(configuration)
 
     # Create the AML Experiment
     experiment = Experiment(ws, configuration["name"])
@@ -194,3 +198,24 @@ def submit_job(ws, configuration, data, env):
     run = experiment.submit(job_object)
 
     return run.get_portal_url()
+
+
+def submit_pipeline(ws, configuration, data):
+    """
+    Create and Submit the Pipeline as AML Experiment
+    """
+    azureml = configuration["provider"]["azureml"]
+    jobs = configuration["jobs"]
+
+    # Connect to Compute Cluster or VM
+    cluster = ws.compute_targets[azureml["compute_name"]]
+
+    for job in jobs:
+        
+
+
+
+
+
+
+    return "url"
