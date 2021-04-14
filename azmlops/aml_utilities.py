@@ -4,6 +4,9 @@ from azureml.core import Workspace, Datastore, Dataset
 from azureml.core import ScriptRunConfig, Experiment, ComputeTarget, Environment
 from azureml.data.data_reference import DataReference
 from azureml.core.authentication import InteractiveLoginAuthentication
+from azureml.pipeline.core import Pipeline
+from azureml.pipeline.steps import PythonScriptStep
+from azureml.core.runconfig import RunConfiguration
 
 def get_configuration(config):
     """
@@ -199,6 +202,33 @@ def submit_job(ws, configuration, data):
 
     return run.get_portal_url()
 
+def create_step(ws, configuration, data, job_name, job_data, cluster):
+    """
+    Create an AML Pipeline step
+    """
+    # create a new runconfig object
+    run_config = RunConfiguration()
+
+    # Config Environment
+    run_config.environment = env
+
+    # Connect DataReferences
+    for datastore in datastores:
+        if datastore["readonly"] == False:
+            run_config.data_references = {
+                datastore["datareference"].data_reference_name: datastore["datareference"].to_config()
+            }
+
+    # Create the step
+    step = PythonScriptStep(name=configuration["name"],
+                            script_name=configuration["scripts"]["main"], 
+                            compute_target=cluster, 
+                            source_directory=configuration["scripts"]["folder"],
+                            arguments = get_arguments(configuration, datastores),
+                            allow_reuse=False,
+                            runconfig=run_config)
+
+    return step
 
 def submit_pipeline(ws, configuration, data):
     """
@@ -210,12 +240,16 @@ def submit_pipeline(ws, configuration, data):
     # Connect to Compute Cluster or VM
     cluster = ws.compute_targets[azureml["compute_name"]]
 
+    # Create all pipeline steps
+    steps = []
     for job in jobs:
-        
+        job_name, job_data = list(job.items())[0]
+        steps.append(create_step(ws, configuration, data, job_name, job_data, cluster))
 
+    # Create Pipeline
 
+    # Publish Pipeline
 
-
-
+    # Submit Pipeline
 
     return "url"
