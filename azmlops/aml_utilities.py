@@ -68,7 +68,7 @@ def connect_dataset(ws, input_data_object):
         "dataset_object" : dataset_object
     }
 
-def connect_datareference(ws, input_data_object):
+def connect_datareference(ws, input_data_object, data_name):
     """
     Connect a DataReference and optionally register associated Datastore
     """
@@ -80,7 +80,7 @@ def connect_datareference(ws, input_data_object):
     # Create DataReference for output Datastore
     datareference_object = DataReference(
         datastore=datastore_object,
-        data_reference_name=f"{input_data_object['name']}_reference",
+        data_reference_name=f"{data_name}_reference",
         path_on_datastore=input_data_object["mount_path"]
     )
 
@@ -96,15 +96,12 @@ def connect_all_data(ws, configuration):
     """
     data = {}
 
-    for x in configuration["data"]:
-        x = list(x.items())[0]
-        data_name = x[0]
-        input_data_object = x[1]
+    for _, (data_name, input_data_object) in enumerate(configuration["data"].items()):
         if input_data_object["type"] == "dataset":
             data[data_name] = connect_dataset(ws, input_data_object)
 
         if input_data_object["type"] == "datareference":
-            data[data_name] = connect_datareference(ws, input_data_object)
+            data[data_name] = connect_datareference(ws, input_data_object, data_name)
 
     return data
 
@@ -161,18 +158,19 @@ def submit_job(ws, configuration, data, env):
     """
     Create and Submit the Job as AML Experiment
     """
+    azureml = configuration["provider"]["azureml"]
+    job = configuration["job"]
+
     # Connect to Compute Cluster or VM
-    cluster = ws.compute_targets[configuration["compute_name"]]
+    cluster = ws.compute_targets[azureml["compute_name"]]
 
     # Create the AML Experiment
     experiment = Experiment(ws, configuration["name"])
 
-    job = configuration["job"]
-
     # Create the job
     job_object = ScriptRunConfig(
-        source_directory = job["scripts"]["folder"],
-        script = job["scripts"]["main"],
+        source_directory = job["code"]["folder"],
+        script = job["code"]["main"],
         arguments = get_arguments(configuration, data),
         compute_target = cluster)
 
