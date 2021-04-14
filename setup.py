@@ -18,7 +18,7 @@ install_requires = [x.strip() for x in all_reqs if ('git+' not in x) and (
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs \
                     if 'git+' not in x]
 
-version = '0.0.15'
+version = '0.0.16'
 
 setup(
  name = 'azmlops',
