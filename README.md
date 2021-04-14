@@ -183,7 +183,8 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 
 ```yaml
 ---
-name: Copy_Data_Script
+name: Copy_Data_Job
+
 provider: 
   azureml:
     workspace:
@@ -191,33 +192,38 @@ provider:
       resource_group: resource_group
       workspace_name: workspace_name
     compute_name: cluster
-environment:
-  name: experiment_env
-  dependencies:
-  - python=3.7
-  - pip:
-    - azureml-defaults
-scripts:
-  folder: copy_data_scripts
-  main: main.py
+
+job:
+  code:
+    folder: copy_data_scripts
+    main: main.py
+  inputs:
+  - input_data
+  outputs:
+  - output_data
+  parameters:
+    input_file: test.txt
+    output_file: test1.txt
+  environment:
+    name: experiment_env
+    dependencies:
+    - python=3.7
+    - pip:
+      - azureml-defaults
+
 data:
-  input:
-  - dataset:
-      name: input_data
-      parameter_name: input_path
-      mount_path: input
-      datastore:
-        name: input_datastore
-  output:
-  - datareference:
-      name: output_data
-      parameter_name: output_path
-      mount_path: output
-      datastore:
-        name: output_datastore
-parameters:
-  input_file: test.txt
-  output_file: test.txt
+- input_data:
+    type: dataset
+    parameter_name: input_path
+    mount_path: input
+    datastore:
+      name: input_datastore
+- output_data:
+    type: datareference
+    parameter_name: output_path
+    mount_path: output
+    datastore:
+      name: output_datastore
 ```
 
 > Note that the **parameter_name** (input_path, output_path) and **parameters** keys (input_file, output_file) correspond to the arguments parsed with ArgumentParser in the Job python script file main entry point.
@@ -321,7 +327,63 @@ This **azmlops** CLI tool utilize a **single YAML file** for configuring all the
 
 ```yaml
 ---
-[WORK IN PROGRESS]
+name: Copy_Data_Pipeline
+
+provider: 
+  azureml:
+    workspace:
+      subscription_id: subscription_id
+      resource_group: resource_group
+      workspace_name: workspace_name
+    compute_name: cluster
+
+jobs:
+- copy_data1:
+    code:
+      folder: copy_data_scripts
+      main: main.py
+    inputs:
+    - input_data
+    outputs:
+    - output_data
+    parameters:
+      input_file: test.txt
+      output_file: test1.txt
+    environment: experiment_env
+- copy_data2:
+    code:
+      folder: copy_data_scripts
+      main: main.py
+    inputs:
+    - output_data
+    outputs:
+    - output_data
+    parameters:
+      input_file: test1.txt
+      output_file: test2.txt
+    environment: experiment_env
+
+data:
+- input_data:
+    type: dataset
+    parameter_name: input_path
+    mount_path: input
+    datastore:
+      name: input_datastore
+- output_data:
+    type: datareference
+    parameter_name: output_path
+    mount_path: output
+    datastore:
+      name: output_datastore
+
+environments:
+- experiment_env:
+  name: experiment_env
+  dependencies:
+  - python=3.7
+  - pip:
+    - azureml-defaults
 ```
 
 ### YAML Pipeline fields documentation

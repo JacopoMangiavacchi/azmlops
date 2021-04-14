@@ -48,59 +48,63 @@ def register_datastore(ws, datastore):
             account_key=datastore["account_key"],
             create_if_not_exists=False)
 
-def connect_dataset(ws, dataset_type):
+def connect_dataset(ws, input_data_object):
     """
-    Connect a DataReference or Dataset and optionally register associated Datastore
+    Connect a Dataset and optionally register associated Datastore
     """
     # Register DataStore
-    datastore = dataset_type["datastore"]
+    datastore = input_data_object["datastore"]
     register_datastore(ws, datastore)
-    dataset_type["datastore_object"] = Datastore(ws, datastore["name"])
+    datastore_object = Datastore(ws, datastore["name"])
 
     # Create Datasets for input Datastore
-    dataset_type["dataset_object"] = Dataset.File.from_files(
-        path=(dataset_type["datastore_object"], dataset_type["mount_path"])
+    dataset_object = Dataset.File.from_files(
+        path=(datastore_object, input_data_object["mount_path"])
     )
 
-def connect_datareference(ws, datareference_type):
+    return { 
+        "type" : input_data_object["type"],
+        "datastore_object" : datastore_object,
+        "dataset_object" : dataset_object
+    }
+
+def connect_datareference(ws, input_data_object):
     """
-    Connect a DataReference or Dataset and optionally register associated Datastore
+    Connect a DataReference and optionally register associated Datastore
     """
     # Register DataStore
-    datastore = datareference_type["datastore"]
+    datastore = input_data_object["datastore"]
     register_datastore(ws, datastore)
-    datareference_type["datastore_object"] = Datastore(ws, datastore["name"])
+    datastore_object = Datastore(ws, datastore["name"])
 
     # Create DataReference for output Datastore
-    datareference_type["datareference_object"] = DataReference(
-        datastore=datareference_type["datastore_object"],
-        data_reference_name=f"{datareference_type['name']}_reference",
-        path_on_datastore=datareference_type["mount_path"]
+    datareference_object = DataReference(
+        datastore=datastore_object,
+        data_reference_name=f"{input_data_object['name']}_reference",
+        path_on_datastore=input_data_object["mount_path"]
     )
 
-def connect_data(ws, data_type):
-    """
-    Connect a DataReference or Dataset and optionally register associated Datastore
-    """
-    if "dataset" in data_type:
-        connect_dataset(ws, data_type["dataset"])
-
-    if "datareference" in data_type:
-        connect_datareference(ws, data_type["datareference"])
+    return { 
+        "type" : input_data_object["type"],
+        "datastore_object" : datastore_object,
+        "datareference_object" : datareference_object
+    }
 
 def connect_all_data(ws, configuration):
     """
     Connect DataReference and Dataset and optionally register associated Datastore
     """
-    data = configuration["data"]
+    data = {}
 
-    if "input" in data:
-        for data_type in data["input"]:
-            connect_data(ws, data_type)
+    for x in configuration["data"]:
+        x = list(x.items())[0]
+        data_name = x[0]
+        input_data_object = x[1]
+        if input_data_object["type"] == "dataset":
+            data[data_name] = connect_dataset(ws, input_data_object)
 
-    if "output" in data:
-        for data_type in data["output"]:
-            connect_data(ws, data_type)
+        if input_data_object["type"] == "datareference":
+            data[data_name] = connect_datareference(ws, input_data_object)
 
     return data
 
@@ -110,7 +114,7 @@ def get_env(configuration):
     writing temporary Env file
     """
     with tempfile.NamedTemporaryFile(delete=True) as fp:
-        environment = configuration["environment"]
+        environment = configuration["job"]["environment"]
         with open(fp.name, 'w') as outfile:
             yaml.dump(environment, outfile, default_flow_style=False)
         env = Environment.from_conda_specification(
@@ -124,26 +128,30 @@ def get_arguments(configuration, data):
     Create script arguments based on Configuration
     """
     arguments = []
+    job = configuration["job"]
 
-    if "input" in data:
-        for data_type in data["input"]:
-            if "dataset" in data_type:
-                dataset_type = data_type["dataset"]
-                arguments.append(f"--{dataset_type['parameter_name']}")
-                arguments.append(dataset_type["dataset_object"].as_named_input(f"{dataset_type['datastore']['name']}_input").as_mount())
+    if "inputs" in job:
+        for data_name in job["inputs"]:
+            data_object = data[data_name]
+            data_config = configuration["data"][data_name]
+
+            if data_object["type"] == "dataset":
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
             else:
-                datareference_type = data_type["datareference"]
-                arguments.append(f"--{datareference_type['parameter_name']}")
-                arguments.append(str(datareference_type["datareference_object"]))
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(str(data_object["datareference_object"]))
 
-    if "output" in data:
-        for data_type in data["output"]:
-            datareference_type = data_type["datareference"]
-            arguments.append(f"--{datareference_type['parameter_name']}")
-            arguments.append(str(datareference_type["datareference_object"]))
+    if "outputs" in job:
+        for data_name in job["outputs"]:
+            data_object = data[data_name]
+            data_config = configuration["data"][data_name]
 
-    if "parameters" in configuration:
-        for parameter in configuration["parameters"].items():
+            arguments.append(f"--{data_config['parameter_name']}")
+            arguments.append(str(data_object["datareference_object"]))
+
+    if "parameters" in job:
+        for parameter in job["parameters"].items():
             arguments.append(f"--{parameter[0]}")
             arguments.append(parameter[1])
 
@@ -159,29 +167,32 @@ def submit_job(ws, configuration, data, env):
     # Create the AML Experiment
     experiment = Experiment(ws, configuration["name"])
 
+    job = configuration["job"]
+
     # Create the job
-    job = ScriptRunConfig(
-        source_directory = configuration["scripts"]["folder"],
-        script = configuration["scripts"]["main"],
+    job_object = ScriptRunConfig(
+        source_directory = job["scripts"]["folder"],
+        script = job["scripts"]["main"],
         arguments = get_arguments(configuration, data),
         compute_target = cluster)
 
     # Connect DataReferences
-    if "input" in data:
-        for data_type in data["input"]:
-            if "datareference" in data_type:
-                datareference_type = data_type["datareference"]
-                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
-    if "output" in data:
-        for data_type in data["output"]:
-            if "datareference" in data_type:
-                datareference_type = data_type["datareference"]
-                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
+    if "inputs" in job:
+        for data_name in configuration["job"]["inputs"]:
+            data_object = data[data_name]
+            if data_object["type"] == "datareference":
+                job_object.run_config.data_references[data_object["datareference_object"].data_reference_name] = data_object["datareference_object"].to_config()
+
+    if "outputs" in job:
+        for data_name in configuration["job"]["outputs"]:
+            data_object = data[data_name]
+            if data_object["type"] == "datareference":
+                job_object.run_config.data_references[data_object["datareference_object"].data_reference_name] = data_object["datareference_object"].to_config()
 
     # Config Environment
-    job.run_config.environment = env
+    job_object.run_config.environment = env
 
     # Submit the Experiment job
-    run = experiment.submit(job)
+    run = experiment.submit(job_object)
 
     return run.get_portal_url()
