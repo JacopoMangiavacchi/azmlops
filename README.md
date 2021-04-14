@@ -212,13 +212,13 @@ job:
       - azureml-defaults
 
 data:
-- input_data:
+  input_data:
     type: dataset
     parameter_name: input_path
     mount_path: input
     datastore:
       name: input_datastore
-- output_data:
+  output_data:
     type: datareference
     parameter_name: output_path
     mount_path: output
@@ -267,7 +267,7 @@ provider:
     - **compute_name**: is the name of the AML Compute cluster or VM to use from the ones configured in the AML Workspace.
 - **environment**: is the placeholder for a classic conda environment yaml file that contain the list of all dependencies
 - **scripts**: contain path to the script folder and the name of the main script file in that folder
-- **data**: contain the list of all input and output datareference / dataset and associated datastore to be created for the job experiment. Use *dataset* for unmutable input data and *datareference* for writable input or output data. 
+- **data**: contain the list of all input and output datareference / dataset and associated datastore to be created for the job experiment. Use *dataset* for unmutable input data and *datareference* for writable input or output data.
     - the following fields must be configured for each data element independently if *dataset* or *datareference*:
         - **name**: a unique name for the data element. To be used for Pipeline I/O and step sequencing
         - **parameter_name**: name of the parameter to be passed to the main python script file of the job for the mounting path associated to the corresponding *dataset* or *datareference*
@@ -364,13 +364,13 @@ jobs:
     environment: experiment_env
 
 data:
-- input_data:
+  input_data:
     type: dataset
     parameter_name: input_path
     mount_path: input
     datastore:
       name: input_datastore
-- output_data:
+  output_data:
     type: datareference
     parameter_name: output_path
     mount_path: output
@@ -378,12 +378,12 @@ data:
       name: output_datastore
 
 environments:
-- experiment_env:
-  name: experiment_env
-  dependencies:
-  - python=3.7
-  - pip:
-    - azureml-defaults
+  experiment_env:
+    name: experiment_env
+    dependencies:
+    - python=3.7
+    - pip:
+      - azureml-defaults
 ```
 
 ### YAML Pipeline fields documentation
