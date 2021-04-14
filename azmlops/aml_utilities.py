@@ -165,29 +165,32 @@ def submit_job(ws, configuration, data, env):
     # Create the AML Experiment
     experiment = Experiment(ws, configuration["name"])
 
+    job = configuration["job"]
+
     # Create the job
-    job = ScriptRunConfig(
-        source_directory = configuration["job"]["scripts"]["folder"],
-        script = configuration["job"]["scripts"]["main"],
+    job_object = ScriptRunConfig(
+        source_directory = job["scripts"]["folder"],
+        script = job["scripts"]["main"],
         arguments = get_arguments(configuration, data),
         compute_target = cluster)
 
     # Connect DataReferences
-    if "input" in data:
-        for data_type in data["input"]:
-            if "datareference" in data_type:
-                datareference_type = data_type["datareference"]
-                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
-    if "output" in data:
-        for data_type in data["output"]:
-            if "datareference" in data_type:
-                datareference_type = data_type["datareference"]
-                job.run_config.data_references[datareference_type["datareference_object"].data_reference_name] = datareference_type["datareference_object"].to_config()
+    if "inputs" in job:
+        for data_name in configuration["job"]["inputs"]:
+            data_object = data[data_name]
+            if data_object["type"] == "datareference":
+                job_object.run_config.data_references[data_object["datareference_object"].data_reference_name] = data_object["datareference_object"].to_config()
+
+    if "outputs" in job:
+        for data_name in configuration["job"]["outputs"]:
+            data_object = data[data_name]
+            if data_object["type"] == "datareference":
+                job_object.run_config.data_references[data_object["datareference_object"].data_reference_name] = data_object["datareference_object"].to_config()
 
     # Config Environment
-    job.run_config.environment = env
+    job_object.run_config.environment = env
 
     # Submit the Experiment job
-    run = experiment.submit(job)
+    run = experiment.submit(job_object)
 
     return run.get_portal_url()
