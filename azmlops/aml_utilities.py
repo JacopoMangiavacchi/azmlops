@@ -249,6 +249,8 @@ def submit_pipeline(ws, configuration, data):
         job_name, job_data = list(job.items())[0]
         steps.append(create_step(ws, configuration, data, job_name, job_data, cluster))
 
+    print(steps)
+    
     # Create Pipeline
 
     # Publish Pipeline

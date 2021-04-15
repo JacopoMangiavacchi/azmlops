@@ -1,10 +1,10 @@
 import sys
 import click
-from .aml_utilities import get_configuration, connect_workspace, connect_all_data, submit_job
+from .aml_utilities import get_configuration, connect_workspace, connect_all_data, submit_job, submit_pipeline
 
 
 @click.group()
-@click.version_option("0.0.16")
+@click.version_option("0.0.17")
 def main():
     """Minimal MLOps CLI interface tool for submitting Job and Pipeline to Azure ML"""
     pass
