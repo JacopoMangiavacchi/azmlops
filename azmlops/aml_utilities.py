@@ -200,7 +200,7 @@ def submit_job(ws, configuration, data):
 
     return run.get_portal_url()
 
-def get_inputs(job, configuration, data):
+def get_inputs(job, configuration, data, pipeline_data):
     """
     Get list of input Datareference and Dataset
     """
@@ -218,7 +218,7 @@ def get_inputs(job, configuration, data):
 
     return inputs
 
-def get_outputs(job, configuration, data):
+def get_outputs(job, configuration, data, pipeline_data):
     """
     Get list of output Datareference
     """
@@ -233,7 +233,40 @@ def get_outputs(job, configuration, data):
 
     return outputs
 
-def create_step(ws, configuration, data, job_name, job_data, cluster):
+def get_arguments_step(job, configuration, data, pipeline_data):
+    """
+    Create script arguments based on Configuration
+    """
+    arguments = []
+
+    if "inputs" in job:
+        for data_name in job["inputs"]:
+            data_object = data[data_name]
+            data_config = configuration["data"][data_name]
+
+            if data_object["type"] == "dataset":
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
+            else:
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(str(data_object["datareference_object"]))
+
+    if "outputs" in job:
+        for data_name in job["outputs"]:
+            data_object = data[data_name]
+            data_config = configuration["data"][data_name]
+
+            arguments.append(f"--{data_config['parameter_name']}")
+            arguments.append(str(data_object["datareference_object"]))
+
+    if "parameters" in job:
+        for parameter in job["parameters"].items():
+            arguments.append(f"--{parameter[0]}")
+            arguments.append(parameter[1])
+
+    return arguments
+
+def create_step(ws, configuration, data, job_name, job_data, cluster, pipeline_data):
     """
     Create an AML Pipeline step
     """
@@ -252,9 +285,9 @@ def create_step(ws, configuration, data, job_name, job_data, cluster):
                             script_name=job_data["code"]["main"], 
                             source_directory=job_data["code"]["folder"],
                             compute_target=cluster,
-                            arguments = get_arguments(job_data, configuration, data),
-                            inputs = get_inputs(job_data, configuration, data),
-                            outputs = get_outputs(job_data, configuration, data),
+                            arguments = get_arguments_step(job_data, configuration, data, pipeline_data),
+                            inputs = get_inputs(job_data, configuration, data, pipeline_data),
+                            outputs = get_outputs(job_data, configuration, data, pipeline_data),
                             allow_reuse=False,
                             runconfig=run_config)
 
@@ -271,10 +304,11 @@ def submit_pipeline(ws, configuration, data):
     cluster = ws.compute_targets[azureml["compute_name"]]
 
     # Create all pipeline steps
+    pipeline_data = []
     steps = []
     for job in jobs:
         job_name, job_data = list(job.items())[0]
-        steps.append(create_step(ws, configuration, data, job_name, job_data, cluster))
+        steps.append(create_step(ws, configuration, data, job_name, job_data, cluster, pipeline_data))
 
     print(steps)
 
