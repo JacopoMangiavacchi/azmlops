@@ -122,12 +122,11 @@ def get_env(environment):
         )
     return env
 
-def get_arguments(configuration, data):
+def get_arguments(job, configuration, data):
     """
     Create script arguments based on Configuration
     """
     arguments = []
-    job = configuration["job"]
 
     if "inputs" in job:
         for data_name in job["inputs"]:
@@ -177,7 +176,7 @@ def submit_job(ws, configuration, data):
     job_object = ScriptRunConfig(
         source_directory = job["code"]["folder"],
         script = job["code"]["main"],
-        arguments = get_arguments(configuration, data),
+        arguments = get_arguments(job, configuration, data),
         compute_target = cluster)
 
     # Connect DataReferences
@@ -215,19 +214,14 @@ def create_step(ws, configuration, data, job_name, job_data, cluster):
     # Config Environment
     run_config.environment = env
 
-    # Connect DataReferences
-    for datastore in datastores:
-        if datastore["readonly"] == False:
-            run_config.data_references = {
-                datastore["datareference"].data_reference_name: datastore["datareference"].to_config()
-            }
-
     # Create the step
-    step = PythonScriptStep(name=configuration["name"],
-                            script_name=configuration["scripts"]["main"], 
+    step = PythonScriptStep(name=job_name,
+                            script_name=job_data["code"]["main"], 
+                            source_directory=job_data["code"]["folder"],
                             compute_target=cluster, 
-                            source_directory=configuration["scripts"]["folder"],
-                            arguments = get_arguments(configuration, datastores),
+                            arguments = get_arguments(job_data, configuration, data),
+                            inputs = ,
+                            outputs =,
                             allow_reuse=False,
                             runconfig=run_config)
 
@@ -250,7 +244,7 @@ def submit_pipeline(ws, configuration, data):
         steps.append(create_step(ws, configuration, data, job_name, job_data, cluster))
 
     print(steps)
-    
+
     # Create Pipeline
 
     # Publish Pipeline
