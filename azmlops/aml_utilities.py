@@ -310,12 +310,20 @@ def submit_pipeline(ws, configuration, data):
         job_name, job_data = list(job.items())[0]
         steps.append(create_step(ws, configuration, data, job_name, job_data, cluster, pipeline_data))
 
-    print(steps)
-
     # Create Pipeline
-
+    pipeline = Pipeline(ws, steps=steps)
+    
+    # Validate Pipeline
+    pipeline.validate()
+    
     # Publish Pipeline
+    published_pipeline = training_pipeline.publish(name=configuration["name"])
+    print(f"The published pipeline ID is {published_pipeline.id}")
 
-    # Submit Pipeline
+    # Submit Pipeline via AML Experiment
+    experiment = Experiment(ws, f"{configuration['name']}_Experiment")
 
-    return "url"
+    # Submit the Experiment job
+    run = experiment.submit(pipeline)
+
+    return run.get_portal_url()
