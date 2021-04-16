@@ -317,7 +317,7 @@ def submit_pipeline(ws, configuration, data):
     pipeline.validate()
     
     # Publish Pipeline
-    published_pipeline = training_pipeline.publish(name=configuration["name"])
+    published_pipeline = pipeline.publish(name=configuration["name"])
     print(f"The published pipeline ID is {published_pipeline.id}")
 
     # Submit Pipeline via AML Experiment
