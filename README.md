@@ -345,7 +345,7 @@ jobs:
     inputs:
     - input_data
     outputs:
-    - output_data
+    - pipeline_data
     parameters:
       input_file: test.txt
       output_file: test1.txt
@@ -355,12 +355,11 @@ jobs:
       folder: copy_data_scripts
       main: main.py
     inputs:
-    - output_data
-    outputs:
+    - pipeline_data
     - output_data
     parameters:
       input_file: test1.txt
-      output_file: test2.txt
+      output_file: output2.txt
     environment: experiment_env
 
 data:
@@ -376,6 +375,10 @@ data:
     mount_path: output
     datastore:
       name: output_datastore
+  pipeline_data:
+    type: pipelinedata
+    input_parameter_name: input_path
+    output_parameter_name: output_path
 
 environments:
   experiment_env:
