@@ -364,7 +364,7 @@ jobs:
 
 data:
   input_data:
-    type: dataset
+    type: datareference
     parameter_name: input_path
     mount_path: input
     datastore:
