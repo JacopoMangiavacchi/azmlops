@@ -93,6 +93,24 @@ def connect_datareference(ws, input_data_object, data_name):
         "datareference_object" : datareference_object
     }
 
+def connect_pipelinedata(ws, input_data_object, data_name):
+    """
+    Connect a PipelineData and optionally register associated Datastore
+    """
+    # Register DataStore
+    datastore = input_data_object["datastore"]
+    register_datastore(ws, datastore)
+    datastore_object = Datastore(ws, datastore["name"])
+
+    # Create PipelineData for output Datastore
+    pipelinedata_object = PipelineData(f"{data_name}_pipelinedata", datastore=datastore_object)
+    
+    return { 
+        "type" : input_data_object["type"],
+        "datastore_object" : datastore_object,
+        "pipelinedata_object" : pipelinedata_object
+    }
+
 def connect_all_data(ws, configuration):
     """
     Connect DataReference and Dataset and optionally register associated Datastore
@@ -104,6 +122,8 @@ def connect_all_data(ws, configuration):
             data[data_name] = connect_dataset(ws, input_data_object)
         if input_data_object["type"] == "datareference":
             data[data_name] = connect_datareference(ws, input_data_object, data_name)
+        if input_data_object["type"] == "pipelinedata":
+            data[data_name] = connect_pipelinedata(ws, input_data_object, data_name)
 
     return data
 
@@ -227,6 +247,8 @@ def get_outputs(job, configuration, data):
         for data_name in job["outputs"]:
             data_object = data[data_name]
             data_config = configuration["data"][data_name]
+
+            if data_config
 
             outputs.append(data_object["datareference_object"])
 
