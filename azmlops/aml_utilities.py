@@ -234,6 +234,8 @@ def get_inputs(job, configuration, data):
                 inputs.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
             if data_object["type"] == "datareference":
                 inputs.append(data_object["datareference_object"])
+            if data_object["type"] == "pipelinedata":
+                inputs.append(data_object["pipelinedata_object"])
 
     return inputs
 
@@ -246,11 +248,7 @@ def get_outputs(job, configuration, data):
     if "outputs" in job:
         for data_name in job["outputs"]:
             data_object = data[data_name]
-            data_config = configuration["data"][data_name]
-
-            if data_config
-
-            outputs.append(data_object["datareference_object"])
+            outputs.append(data_object["pipelinedata_object"])
 
     return outputs
 
