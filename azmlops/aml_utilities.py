@@ -4,7 +4,7 @@ from azureml.core import Workspace, Datastore, Dataset
 from azureml.core import ScriptRunConfig, Experiment, ComputeTarget, Environment
 from azureml.data.data_reference import DataReference
 from azureml.core.authentication import InteractiveLoginAuthentication
-from azureml.pipeline.core import Pipeline
+from azureml.pipeline.core import Pipeline, PipelineData
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.core.runconfig import RunConfiguration
 
@@ -102,7 +102,6 @@ def connect_all_data(ws, configuration):
     for _, (data_name, input_data_object) in enumerate(configuration["data"].items()):
         if input_data_object["type"] == "dataset":
             data[data_name] = connect_dataset(ws, input_data_object)
-
         if input_data_object["type"] == "datareference":
             data[data_name] = connect_datareference(ws, input_data_object, data_name)
 
@@ -136,7 +135,7 @@ def get_arguments(job, configuration, data):
             if data_object["type"] == "dataset":
                 arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
-            else:
+            if data_object["type"] == "datareference":
                 arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(str(data_object["datareference_object"]))
 
@@ -213,7 +212,7 @@ def get_inputs(job, configuration, data, pipeline_data):
 
             if data_object["type"] == "dataset":
                 inputs.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
-            else:
+            if data_object["type"] == "datareference":
                 inputs.append(data_object["datareference_object"])
 
     return inputs
@@ -247,7 +246,7 @@ def get_arguments_step(job, configuration, data, pipeline_data):
             if data_object["type"] == "dataset":
                 arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(data_object["dataset_object"].as_named_input(f"{data_config['datastore']['name']}_input").as_mount())
-            else:
+            if data_object["type"] == "datareference":
                 arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(str(data_object["datareference_object"]))
 
