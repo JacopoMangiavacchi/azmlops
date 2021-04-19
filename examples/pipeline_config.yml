@@ -48,6 +48,8 @@ data:
     type: pipelinedata
     input_parameter_name: input_path
     output_parameter_name: output_path
+    datastore:
+      name: output_datastore
 environments:
   experiment_env:
     name: experiment_env
