@@ -314,16 +314,35 @@ Finally, Pipeline are submitted for execution to run on a AML Compute environmen
 
 A fundamental element in the design of the **azmlops** tool is the complete reusability of Job resources such as the Python script files and folders that could be transparently reused and submitted as individual Job or as sequence of steps of a more complex Pipeline.
 
+### How an AML Pipeline Experiment connect to data
+
+As for Job Experiment the AML platform when executing all steps of a pipeline use the same Linux FUSE kernel module to mount Blog Storage paths and reference to any file contained in it as local file from the Job script code.
+
+Other than DataReference and DataSet pipelines also support a special kind of data object to manage the passage of data between the different steps of a pipeline.  The PipelineData class in the AML Python SDK implement this feature.
+
+Through the use of DataReference the AML infrastructure, when executing a pipeline, is able to automatically understand the details of the Directed Acyclic Graph behind the pipeline logic and understand implicitly what steps can be executed in parallel or sequentially.
+
+### PipelineData
+
+A PipelineData represents a temporary path in a datastore created automatically by the AML pipeline execution. This path can be passed to the step python code as a parameter exactly like DataReference and DataSet path are passed to job experiment.  There is nothing special that the python script file need to do differently for PipelineData.
+
+> PipelineData is the only mechanism supported for passing data between different steps of a pipeline.
+
+As a single PipelineData by definition could be used as output of one step and as input of another step this **azmlops** tool allows to specify two distinct parameter name, one for the input and one for the output, for each PipelineData configured.
+
 ### YAML Configuration file for Pipeline
 
 This **azmlops** CLI tool utilize a **single YAML file** for configuring all the following necessary information needed to submit and run a Pipeline as AML Experiment:
 
 - A pipeline name
-- ...
+- The AML Workspace connection information
+- The AML Compute to use to run the experiment
+- For all the steps of a pipeline:
+  - The python Environment to use to run the job and the list of dependencies
+  - The path to the script folder and the main script file in that folder that implement the code of the job
+  - The list of input and output data, in terms of DataSet, DataReference and DataPipeline to be created and mounted in the AML Compute environment when running the job experiment
 
-[WORK IN PROGRESS]
-
-> Example of a pipeline YAML configuration file reusing the same  *copy_data* sample script used in an Job Experiment above:
+> Example of a pipeline YAML configuration file reusing the same  *copy_data* sample script used in an Job Experiment above in two different steps of a single pipeline:
 
 ```yaml
 ---
@@ -388,6 +407,10 @@ environments:
     - pip:
       - azureml-defaults
 ```
+
+> Note that the same python script we used before to physically copy a file from a source path to a definition path is execute in two different steps. The PipelineData object will allow to copy on a temporary path and pass this information as output of the first step and input of the second step.
+
+> Note in particular how the two different parameter name for the same PipelineData object allows to transparently reuse the same python script with the same parameter name for the two tasks.
 
 ### YAML Pipeline fields documentation
 
