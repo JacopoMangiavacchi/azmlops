@@ -269,14 +269,21 @@ def get_arguments_step(job, configuration, data):
             if data_object["type"] == "datareference":
                 arguments.append(f"--{data_config['parameter_name']}")
                 arguments.append(str(data_object["datareference_object"]))
+            if data_object["type"] == "pipelinedata":
+                arguments.append(f"--{data_config['input_parameter_name']}")
+                arguments.append(str(data_object["pipelinedata_object"]))
 
     if "outputs" in job:
         for data_name in job["outputs"]:
             data_object = data[data_name]
             data_config = configuration["data"][data_name]
 
-            arguments.append(f"--{data_config['parameter_name']}")
-            arguments.append(str(data_object["datareference_object"]))
+            if data_object["type"] == "datareference":
+                arguments.append(f"--{data_config['parameter_name']}")
+                arguments.append(str(data_object["datareference_object"]))
+            if data_object["type"] == "pipelinedata":
+                arguments.append(f"--{data_config['output_parameter_name']}")
+                arguments.append(str(data_object["pipelinedata_object"]))
 
     if "parameters" in job:
         for parameter in job["parameters"].items():
