@@ -135,6 +135,8 @@ This basically avoid to use specific Azure Storage API in the job or pipeline sc
 
 DataStore, DataReference and DataSet are the main classes in the AML Python SDK to configure this feature.
 
+![Data in Azure ML](images/amldata.png)
+
 ### DataStore
 
 A DataStore represents a storage abstraction over an Azure Machine Learning storage account. It can be created interactively with the Azure Studio web interface or programmatically in Python with the DataStore class.
@@ -413,6 +415,12 @@ environments:
 > Note that the same python script we used before to physically copy a file from a source path to a definition path is execute in two different steps. The PipelineData object will allow to copy on a temporary path and pass this information as output of the first step and input of the second step.
 
 > Note in particular how the two different parameter name for the same PipelineData object allows to transparently reuse the same python script with the same parameter name for the two tasks.
+
+The image below shows the final AML Pipeline built from the pipeline configuration above.  
+
+![Copy Data Pipeline](images/pipeline.png)
+
+> Note how through the usage of PipelineData the AML runtime is able to understand that the two steps copy_data1 and copy_data2 have to be executed in sequence and not in parallel.
 
 ### YAML Pipeline fields documentation
 
