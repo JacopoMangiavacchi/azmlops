@@ -8,7 +8,7 @@ from azureml.pipeline.core import Pipeline, PipelineData
 from azureml.pipeline.steps import PythonScriptStep
 from azureml.core.runconfig import RunConfiguration
 
-def get_configuration(config):
+def get_configuration(config: str) -> dict:
     """
     Open Config YAML file
     """
@@ -16,7 +16,7 @@ def get_configuration(config):
         configuration = yaml.load(f, Loader=yaml.FullLoader)
     return configuration
 
-def connect_workspace(configuration):
+def connect_workspace(configuration: dict) -> Workspace:
     """
     Connect to AML Workspace
     """
@@ -38,7 +38,7 @@ def connect_workspace(configuration):
         auth=interactive_auth
     )
 
-def register_datastore(ws, datastore):
+def register_datastore(ws: Workspace, datastore: dict) -> None:
     """
     Register a Datastore if container_name, account_name and account_key are provided
     """
@@ -51,7 +51,7 @@ def register_datastore(ws, datastore):
             account_key=datastore["account_key"],
             create_if_not_exists=False)
 
-def connect_dataset(ws, input_data_object):
+def connect_dataset(ws: Workspace, input_data_object: dict) -> dict:
     """
     Connect a Dataset and optionally register associated Datastore
     """
@@ -71,7 +71,7 @@ def connect_dataset(ws, input_data_object):
         "dataset_object" : dataset_object
     }
 
-def connect_datareference(ws, input_data_object, data_name):
+def connect_datareference(ws: Workspace, input_data_object: dict, data_name: str) -> dict:
     """
     Connect a DataReference and optionally register associated Datastore
     """
@@ -93,7 +93,7 @@ def connect_datareference(ws, input_data_object, data_name):
         "datareference_object" : datareference_object
     }
 
-def connect_pipelinedata(ws, input_data_object, data_name):
+def connect_pipelinedata(ws: Workspace, input_data_object: dict, data_name: str) -> dict:
     """
     Connect a PipelineData and optionally register associated Datastore
     """
@@ -111,7 +111,7 @@ def connect_pipelinedata(ws, input_data_object, data_name):
         "pipelinedata_object" : pipelinedata_object
     }
 
-def connect_all_data(ws, configuration):
+def connect_all_data(ws: Workspace, configuration: dict) -> dict:
     """
     Connect DataReference and Dataset and optionally register associated Datastore
     """
@@ -127,7 +127,7 @@ def connect_all_data(ws, configuration):
 
     return data
 
-def get_env(environment):
+def get_env(environment: dict) -> Environment:
     """
     Setup Environment to execute the job
     writing temporary Env file
@@ -141,7 +141,7 @@ def get_env(environment):
         )
     return env
 
-def get_arguments(job, configuration, data):
+def get_arguments(job: dict, configuration: dict, data: dict) -> list:
     """
     Create script arguments based on Configuration
     """
@@ -174,7 +174,7 @@ def get_arguments(job, configuration, data):
 
     return arguments
 
-def submit_job(ws, configuration, data):
+def submit_job(ws: Workspace, configuration: dict, data: dict) -> str:
     """
     Create and Submit the Job as AML Experiment
     """
@@ -219,7 +219,7 @@ def submit_job(ws, configuration, data):
 
     return run.get_portal_url()
 
-def get_inputs(job, configuration, data):
+def get_inputs(job: dict, configuration: dict, data: dict) -> list:
     """
     Get list of input Datareference and Dataset
     """
@@ -239,7 +239,7 @@ def get_inputs(job, configuration, data):
 
     return inputs
 
-def get_outputs(job, configuration, data):
+def get_outputs(job: dict, configuration: dict, data: dict) -> list:
     """
     Get list of output Datareference
     """
@@ -252,7 +252,7 @@ def get_outputs(job, configuration, data):
 
     return outputs
 
-def get_arguments_step(job, configuration, data):
+def get_arguments_step(job: dict, configuration: dict, data: dict) -> list:
     """
     Create script arguments based on Configuration
     """
@@ -292,7 +292,7 @@ def get_arguments_step(job, configuration, data):
 
     return arguments
 
-def create_step(ws, configuration, data, job_name, job_data, cluster):
+def create_step(ws: Workspace, configuration: dict, data: dict, job_name: str, job_data: dict, cluster: ComputeTarget) -> PythonScriptStep:
     """
     Create an AML Pipeline step
     """
@@ -319,7 +319,7 @@ def create_step(ws, configuration, data, job_name, job_data, cluster):
 
     return step
 
-def submit_pipeline(ws, configuration, data):
+def submit_pipeline(ws: Workspace, configuration: dict, data: dict) -> str:
     """
     Create and Submit the Pipeline as AML Experiment
     """
