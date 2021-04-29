@@ -26,7 +26,7 @@ This tool receive as single input parameter the path to the YAML file containing
 ```bash
 $ azmlops --help
 $ azmlops job {local path to job config}.yml
-# E.g. ./examples/job_config.yml, whjch you can create based on ./examples/job_config_example.yml
+# E.g. ./examples/job_config.yml, which you can create based on ./examples/job_config_example.yml
 $ azmlops pipeline {local path to pipeline config}.yml 
 # E.g. ./examples/pipeline_config.yml, which you can create based on ./examples/pipeline_config_example.yml
 ```
