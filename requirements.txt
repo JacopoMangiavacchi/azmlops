@@ -1,4 +1,5 @@
 azureml
 azureml-core
+azureml-pipeline
 click
 pyyaml
