@@ -18,6 +18,12 @@ Other main reasons for the development of this tool have been the transparent su
 $ pip install azmlops
 ```
 
+## Local install from source code
+
+```bash
+$ python setup.py install
+```
+
 ## Usage
 
 This tool receive as single input parameter the path to the YAML file containing the configuration of the Job or Pipeline to run.
@@ -39,6 +45,7 @@ This tool depends on the following requirements:
 ```text
 azureml
 azureml-core
+azureml-pipeline
 click
 pyyaml
 ```
