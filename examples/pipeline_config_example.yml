@@ -1,6 +1,7 @@
+# Copy into git ignored *config.yml file and enter your own details
 ---
 name: Copy_Data_Pipeline
-provider: 
+provider:
   azureml:
     workspace:
       subscription_id: subscription_id
@@ -10,19 +11,19 @@ provider:
 jobs:
 - copy_data1:
     code:
-      folder: copy_data_scripts
+      folder: examples/copy_data_scripts
       main: main.py
     inputs:
     - input_data
     outputs:
     - pipeline_data
     parameters:
-      input_file: test.txt
-      output_file: test1.txt
+      input_file: test.txt # Pre-existing file in your input datastore
+      output_file: test1.txt # File to create in your output datastore
     environment: experiment_env
 - copy_data2:
     code:
-      folder: copy_data_scripts
+      folder: examples/copy_data_scripts
       main: main.py
     inputs:
     - pipeline_data
@@ -35,13 +36,13 @@ data:
   input_data:
     type: datareference
     parameter_name: input_path
-    mount_path: input
+    mount_path: /
     datastore:
       name: input_datastore
   output_data:
     type: datareference
     parameter_name: output_path
-    mount_path: output
+    mount_path: /
     datastore:
       name: output_datastore
   pipeline_data:
