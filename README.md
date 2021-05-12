@@ -15,7 +15,8 @@ Other main reasons for the development of this tool have been the transparent su
 ## Install
 
 ```bash
-$ pip install azmlops
+$ git clone git@github.com:JacopoMangiavacchi/azmlops.git
+$ pip install ./azmlops
 ```
 
 ## Local install from source code
@@ -30,8 +31,10 @@ This tool receive as single input parameter the path to the YAML file containing
 
 ```bash
 $ azmlops --help
-$ azmlops job path_to_job_config.yaml
-$ azmlops pipeline path_to_pipeline_config.yaml
+$ azmlops job {local path to job config}.yml
+# E.g. ./examples/job_config.yml, which you can create based on ./examples/job_config_example.yml
+$ azmlops pipeline {local path to pipeline config}.yml 
+# E.g. ./examples/pipeline_config.yml, which you can create based on ./examples/pipeline_config_example.yml
 ```
 
 Calling the CLI tool with success will return a URL for monitoring in the Azure ML Studio web portal the execution and logs of Experiments about the submitted Jobs or Pipelines.
@@ -40,7 +43,7 @@ Calling the CLI tool with success will return a URL for monitoring in the Azure 
 
 This tool is implemented in Python 3.8 and it use the Azure ML Python SDK to create and submit data connection and scripts to an AML Compute environment such as a Azure Batch cluster or a VM.
 
-This tool depends on the following requirements:
+This tool depends on the following requirements, which are installed with it:
 
 ```text
 azureml
@@ -171,9 +174,9 @@ The path to the data in the datastore can be the root (/), a directory within th
 
 ### DataSet
 
-As DataReference Dataset is a reference to data in a Datastore and it is created specifying a specific path to the root (/), a directory within the datastore, or a file in the datastore.
+A Dataset is a reference to data in a Datastore and it is created specifying a specific path to the root (/), a directory within the datastore, or a file in the datastore.
 
-The main difference between a DataSet and a DataReference is that DataSet are mounted through the Linux FUSE kernel module as Read-only volume and therefor they guarantee the **data immutability** pattern when running Jobs and Pipelines.
+The main difference between a DataSet and a DataReference is that DataSet are mounted through the Linux FUSE kernel module as Read-only volume and therefore they guarantee the **data immutability** pattern when running Jobs and Pipelines.
 
 > The **azmlops** tool use DataSet or DataReference for Input data and DataReference for output data.
 

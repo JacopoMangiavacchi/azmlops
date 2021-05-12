@@ -1,5 +1,5 @@
-azureml
-azureml-core
-azureml-pipeline
-click
-pyyaml
+azureml==0.2.7
+azureml-core==1.27.0
+azureml-pipeline==1.27.0
+click==7.1.2
+pyyaml==5.4.1
